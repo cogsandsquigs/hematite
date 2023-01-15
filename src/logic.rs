@@ -55,8 +55,7 @@ impl Logic {
     pub fn start(&mut self, state: &GameState) {
         let id = &state.game.id;
 
-        info!("Starting game!");
-        info!("Game ID: {}", id);
+        info!("Starting game '{id}'!");
 
         let engine = Engine::new(id.clone(), state.clone());
 
@@ -67,8 +66,7 @@ impl Logic {
     pub fn end(&mut self, state: &GameState) {
         let id = &state.game.id;
 
-        info!("Game over!");
-        info!("Game ID: {}", id);
+        info!("Game '{id}' over!");
 
         self.games.remove(id);
     }
@@ -76,64 +74,16 @@ impl Logic {
     // move is called on every turn and returns your next move
     // Valid moves are "up", "down", "left", or "right"
     // See https://docs.battlesnake.com/api/example-move for available data
-    pub fn get_move(
-        &mut self,
-        _game: &Game,
-        turn: &u32,
-        _board: &Board,
-        you: &Battlesnake,
-    ) -> Value {
-        let mut is_move_safe: HashMap<_, _> = vec![
-            ("up", true),
-            ("down", true),
-            ("left", true),
-            ("right", true),
-        ]
-        .into_iter()
-        .collect();
+    pub fn get_move(&mut self, state: &GameState) -> Value {
+        info!("Calculating move...");
 
-        // We've included code to prevent your Battlesnake from moving backwards
-        let my_head = &you.body[0]; // Coordinates of your head
-        let my_neck = &you.body[1]; // Coordinates of your "neck"
+        let id = &state.game.id;
+        let engine = self.games.get_mut(id).unwrap();
 
-        if my_neck.x < my_head.x {
-            // Neck is left of head, don't move left
-            is_move_safe.insert("left", false);
-        } else if my_neck.x > my_head.x {
-            // Neck is right of head, don't move right
-            is_move_safe.insert("right", false);
-        } else if my_neck.y < my_head.y {
-            // Neck is below head, don't move down
-            is_move_safe.insert("down", false);
-        } else if my_neck.y > my_head.y {
-            // Neck is above head, don't move up
-            is_move_safe.insert("up", false);
-        }
+        engine.update(state.clone());
+        let chosen = engine.get_move();
 
-        // TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-        // let board_width = &board.width;
-        // let board_height = &board.height;
-
-        // TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-        // let my_body = &you.body;
-
-        // TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-        // let opponents = &board.snakes;
-
-        // Are there any safe moves left?
-        let safe_moves = is_move_safe
-            .into_iter()
-            .filter(|&(_, v)| v)
-            .map(|(k, _)| k)
-            .collect::<Vec<_>>();
-
-        // Choose a random move from the safe ones
-        let chosen = safe_moves.choose(&mut rand::thread_rng()).unwrap();
-
-        // TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-        // let food = &board.food;
-
-        info!("Moving {}: {}", turn, chosen);
+        info!("Moving {}", chosen);
 
         json!({ "move": chosen })
     }

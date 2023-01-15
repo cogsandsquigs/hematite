@@ -28,12 +28,7 @@ async fn handle_start(logic: &State<RwLock<Logic>>, start_req: Json<GameState>) 
 
 #[post("/move", format = "json", data = "<move_req>")]
 async fn handle_move(logic: &State<RwLock<Logic>>, move_req: Json<GameState>) -> Json<Value> {
-    let response = logic.write().await.get_move(
-        &move_req.game,
-        &move_req.turn,
-        &move_req.board,
-        &move_req.you,
-    );
+    let response = logic.write().await.get_move(&move_req);
 
     Json(response)
 }
