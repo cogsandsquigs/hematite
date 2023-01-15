@@ -1,36 +1,34 @@
 pub mod board;
+pub mod engine;
 pub mod game;
 pub mod logic;
 
 use crate::game::GameState;
+use crate::logic::Logic;
 use log::info;
 use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::{get, launch, post, routes};
+use rocket::tokio::sync::RwLock;
+use rocket::{get, launch, post, routes, State};
 use serde_json::Value;
 use std::env;
 
 #[get("/")]
-fn handle_index() -> Json<Value> {
-    Json(logic::info())
+async fn handle_index(logic: &State<RwLock<Logic>>) -> Json<Value> {
+    Json(logic.read().await.info())
 }
 
 #[post("/start", format = "json", data = "<start_req>")]
-fn handle_start(start_req: Json<GameState>) -> Status {
-    logic::start(
-        &start_req.game,
-        &start_req.turn,
-        &start_req.board,
-        &start_req.you,
-    );
+async fn handle_start(logic: &State<RwLock<Logic>>, start_req: Json<GameState>) -> Status {
+    logic.write().await.start(&start_req);
 
     Status::Ok
 }
 
 #[post("/move", format = "json", data = "<move_req>")]
-fn handle_move(move_req: Json<GameState>) -> Json<Value> {
-    let response = logic::get_move(
+async fn handle_move(logic: &State<RwLock<Logic>>, move_req: Json<GameState>) -> Json<Value> {
+    let response = logic.write().await.get_move(
         &move_req.game,
         &move_req.turn,
         &move_req.board,
@@ -41,8 +39,8 @@ fn handle_move(move_req: Json<GameState>) -> Json<Value> {
 }
 
 #[post("/end", format = "json", data = "<end_req>")]
-fn handle_end(end_req: Json<GameState>) -> Status {
-    logic::end(&end_req.game, &end_req.turn, &end_req.board, &end_req.you);
+async fn handle_end(logic: &State<RwLock<Logic>>, end_req: Json<GameState>) -> Status {
+    logic.write().await.end(&end_req);
 
     Status::Ok
 }
@@ -66,12 +64,15 @@ fn rocket() -> _ {
 
     info!("Starting Battlesnake Server...");
 
+    let logic = Logic::new();
+
     rocket::build()
         .attach(AdHoc::on_response("Server ID Middleware", |_, res| {
             Box::pin(async move {
-                res.set_raw_header("Server", "battlesnake/github/starter-snake-rust");
+                res.set_raw_header("Server", "cogsandsquigs/github/ferrite");
             })
         }))
+        .manage(RwLock::new(logic))
         .mount(
             "/",
             routes![handle_index, handle_start, handle_move, handle_end],

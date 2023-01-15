@@ -1,6 +1,7 @@
 use rocket::serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug)]
+/// The board where the game is played.
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Board {
     pub height: u32,
     pub width: u32,
@@ -9,7 +10,8 @@ pub struct Board {
     pub hazards: Vec<Coord>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+/// A battlesnake.
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Battlesnake {
     pub id: String,
     pub name: String,
@@ -21,8 +23,18 @@ pub struct Battlesnake {
     pub shout: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+/// A coordinate on the board.
+#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
 pub struct Coord {
-    pub x: u32,
-    pub y: u32,
+    pub x: i32,
+    pub y: i32,
+}
+
+/// A move that a snake can make.
+#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
+pub enum Move {
+    Up,
+    Down,
+    Left,
+    Right,
 }
