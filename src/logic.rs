@@ -10,13 +10,8 @@
 // To get you started we've included code to prevent your Battlesnake from moving backwards.
 // For more info see docs.battlesnake.com
 
-use crate::{
-    board::{Battlesnake, Board},
-    engine::Engine,
-    game::{Game, GameState},
-};
+use crate::{engine::Engine, game::GameState};
 use log::info;
-use rand::seq::SliceRandom;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 

@@ -13,6 +13,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct Engine {
     /// The ID of the game.
+    #[allow(dead_code)]
     game_id: String,
 
     /// The board where the game is played.
