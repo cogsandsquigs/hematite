@@ -1,7 +1,7 @@
 use super::Engine;
-use crate::board::{
-    Battlesnake,
-    Move::{self, *},
+use crate::game::{
+    board::Battlesnake,
+    moves::Move::{self, *},
 };
 use std::collections::HashSet;
 
@@ -17,18 +17,21 @@ impl Engine {
 impl Engine {
     /// Gets all the safe moves for `snake`.
     pub fn snake_safe_moves(&self, snake: &Battlesnake) -> HashSet<Move> {
-        let mut moves = Move::all();
-
-        self.snake_non_intersecting_moves(&mut moves, snake);
-        self.snake_inside_board_moves(&mut moves, snake);
+        let moves = Move::all(); // All the moves
+        let moves = self.snake_non_intersecting_moves(moves, snake);
+        let moves = self.snake_inside_board_moves(moves, snake);
 
         moves
     }
 
     /// Gets all the moves for `snake` that wont intersect other snakes, including itself.
     /// If it could intersect itself, exclude the head from the check.
-    fn snake_non_intersecting_moves(&self, moves: &mut HashSet<Move>, snake: &Battlesnake) {
-        let head = &snake.head; // Coordinates of your head
+    fn snake_non_intersecting_moves(
+        &self,
+        mut moves: HashSet<Move>,
+        snake: &Battlesnake,
+    ) -> HashSet<Move> {
+        let head = &snake.head; // Coordinates of the head
 
         // Flat-map the snakes into a list of all coordinates, and check if the head
         // of the snake is in any of the other snakes' bodies.
@@ -43,14 +46,23 @@ impl Engine {
 
             // Convert the two coordinates (`coord` and `head`) into a move, and
             // remove it from the list of possible moves.
-            if let Some(move_) = Move::from_coords(coord, head) {
+            // Note that `from_coords` requires that we start at `head` and end at
+            // `coord` for the moves to come out in the right order (e.g. if head is (0, 0)
+            // and coord is (0, 1), the move should be Up, not Down).
+            if let Some(move_) = Move::from_coords(head, coord) {
                 moves.remove(&move_);
             }
         }
+
+        moves
     }
 
     /// Get all the moves for `snake` that won't go over the board's bounds.
-    fn snake_inside_board_moves(&self, moves: &mut HashSet<Move>, snake: &Battlesnake) {
+    fn snake_inside_board_moves(
+        &self,
+        mut moves: HashSet<Move>,
+        snake: &Battlesnake,
+    ) -> HashSet<Move> {
         let head = &snake.body[0]; // Coordinates of your head
         let board_width = &self.board.width;
         let board_height = &self.board.height;
@@ -71,5 +83,7 @@ impl Engine {
         if head.y == (board_height - 1) as i32 {
             moves.remove(&Up);
         }
+
+        moves
     }
 }

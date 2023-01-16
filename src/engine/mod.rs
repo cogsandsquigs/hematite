@@ -1,8 +1,10 @@
-mod immediate_survival;
+mod longevity;
+mod safety;
 
-use crate::{
-    board::{Battlesnake, Board, Move},
-    game::GameState,
+use crate::game::{
+    board::{Battlesnake, Board},
+    moves::Move,
+    GameState,
 };
 use rand::seq::SliceRandom;
 
@@ -38,19 +40,34 @@ impl Engine {
 
     /// Get the next move for the snake.
     pub fn get_move(&self) -> Move {
-        // Are there any safe moves left?
-        let safe_moves = self.engine_safe_moves().into_iter().collect::<Vec<_>>();
+        // Get the set of immediately safe moves
+        let safe_moves = self.engine_safe_moves();
 
-        // Choose a random move from the safe ones
-        let Some(chosen ) = safe_moves.choose(&mut rand::thread_rng()).copied()
+        // Get the set of long-term safe moves
+        let moves = self.engine_longevity_moves(safe_moves.clone());
+
+        // Choose a random move from the set of moves
+        if let Some(chosen) = moves
+            .into_iter()
+            .collect::<Vec<_>>()
+            .choose(&mut rand::thread_rng())
+            .copied()
+        {
+            chosen
+        }
+        // If there are no moves, choose a random move from all safe moves
+        else if let Some(chosen) = safe_moves
+            .into_iter()
+            .collect::<Vec<_>>()
+            .choose(&mut rand::thread_rng())
+            .copied()
+        {
+            chosen
+        }
         // If there are no safe moves, choose a random move from all the moves
         else {
-            return Move::random();
-        };
-
-        // TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-        // let food = &board.food;
-
-        chosen
+            println!("No safe moves! Choosing a random move.");
+            Move::random()
+        }
     }
 }

@@ -1,51 +1,10 @@
+use super::coord::Coord;
 use rand::seq::IteratorRandom;
 use rocket::serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
     fmt::{Display, Formatter},
 };
-
-/// The board where the game is played.
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Board {
-    pub height: u32,
-    pub width: u32,
-    pub food: Vec<Coord>,
-    pub snakes: Vec<Battlesnake>,
-    pub hazards: Vec<Coord>,
-}
-
-/// A battlesnake.
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Battlesnake {
-    pub id: String,
-    pub name: String,
-    pub health: u32,
-    pub body: Vec<Coord>,
-    pub head: Coord,
-    pub length: u32,
-    pub latency: String,
-    pub shout: Option<String>,
-}
-
-/// A coordinate on the board.
-#[derive(Deserialize, Serialize, Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct Coord {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl From<(i32, i32)> for Coord {
-    fn from((x, y): (i32, i32)) -> Self {
-        Self { x, y }
-    }
-}
-
-impl From<Coord> for (i32, i32) {
-    fn from(val: Coord) -> Self {
-        (val.x, val.y)
-    }
-}
 
 /// A move that a snake can make.
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -96,7 +55,7 @@ impl Move {
     }
 
     /// Turns the move into an ending coordinate point given a starting coordinate.
-    pub fn to_coord(&self, start: Coord) -> Coord {
+    pub fn to_coord(&self, start: &Coord) -> Coord {
         match self {
             Move::Up => (start.x, start.y + 1).into(),
             Move::Down => (start.x, start.y - 1).into(),

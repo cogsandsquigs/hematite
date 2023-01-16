@@ -1,4 +1,8 @@
-use crate::board::{Battlesnake, Board};
+pub mod board;
+pub mod coord;
+pub mod moves;
+
+use self::board::{Battlesnake, Board};
 use rocket::serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
