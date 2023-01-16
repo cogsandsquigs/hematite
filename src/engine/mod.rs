@@ -8,7 +8,7 @@ use crate::game::{
     moves::Move,
     GameState,
 };
-use rand::seq::SliceRandom;
+use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
 
 /// The engine for Hematite.
 #[derive(Debug, Clone)]
@@ -27,7 +27,7 @@ pub struct Engine {
     mode: Mode,
 
     /// The random number generator for the engine.
-    rng: rand::rngs::SmallRng,
+    rng: SmallRng,
 }
 
 impl Engine {
@@ -38,7 +38,7 @@ impl Engine {
             board: initial_state.board,
             you: initial_state.you,
             mode: Scared,
-            rng: rand::thread_rng(),
+            rng: SmallRng::from_entropy(),
         }
     }
 
@@ -62,7 +62,7 @@ impl Engine {
             return if let Some(chosen) = safe_moves
                 .into_iter()
                 .collect::<Vec<_>>()
-                .choose(&mut rand::thread_rng())
+                .choose(&mut self.rng)
                 .copied()
             {
                 chosen
@@ -84,7 +84,7 @@ impl Engine {
         if let Some(chosen) = moves
             .into_iter()
             .collect::<Vec<_>>()
-            .choose(&mut rand::thread_rng())
+            .choose(&mut self.rng)
             .copied()
         {
             chosen
@@ -93,7 +93,7 @@ impl Engine {
         else if let Some(chosen) = safe_moves
             .into_iter()
             .collect::<Vec<_>>()
-            .choose(&mut rand::thread_rng())
+            .choose(&mut self.rng)
             .copied()
         {
             chosen
