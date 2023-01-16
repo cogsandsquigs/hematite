@@ -40,9 +40,9 @@ impl Logic {
         json!({
             "apiversion": "1",
             "author": "cogsandsquigs",
-            "color": "#000000",
+            "color": "#0e0d0b",
             "head": "sand-worm",
-            "tail": "sharp", // TODO: Choose tail
+            "tail": "sharp",
         })
     }
 
