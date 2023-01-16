@@ -11,4 +11,4 @@ EXPOSE 8080
 # Install the dependencies
 RUN cargo build --release
 
-CMD ["target/release/ferrite"]
+CMD ["target/release/hematite"]

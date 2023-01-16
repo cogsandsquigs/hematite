@@ -1,7 +1,7 @@
 [package]
 	authors = ["Ian Pratt <ianjdpratt@gmail.com>"]
 	edition = "2021"
-	name    = "ferrite"
+	name    = "hematite"
 	version = "0.1.0"
 
 	description = "A Battlesnake written in Rust"

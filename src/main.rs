@@ -63,7 +63,7 @@ fn rocket() -> _ {
     rocket::build()
         .attach(AdHoc::on_response("Server ID Middleware", |_, res| {
             Box::pin(async move {
-                res.set_raw_header("Server", "cogsandsquigs/github/ferrite");
+                res.set_raw_header("Server", "cogsandsquigs/github/hematite");
             })
         }))
         .manage(RwLock::new(logic))

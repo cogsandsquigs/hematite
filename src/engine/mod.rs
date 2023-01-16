@@ -8,7 +8,7 @@ use crate::game::{
 };
 use rand::seq::SliceRandom;
 
-/// The engine for Ferrite.
+/// The engine for Hematite.
 #[derive(Debug, Clone)]
 pub struct Engine {
     /// The ID of the game.
