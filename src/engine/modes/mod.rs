@@ -19,7 +19,7 @@ pub enum Mode {
 impl Engine {
     /// Update the mode based on the snake's health.
     pub fn update_engine_mode(&mut self) {
-        if self.you.health < 50 {
+        if self.health() <= self.average_distance_to_food() + 10 {
             self.mode = Hungry;
         } else {
             self.mode = Scared;
@@ -27,5 +27,17 @@ impl Engine {
 
         // Log the mode.
         debug!("Mode: {:?}", self.mode)
+    }
+
+    /// Get the average distance to the food.
+    pub fn average_distance_to_food(&self) -> u32 {
+        let head = self.you.head;
+
+        self.board
+            .food
+            .iter()
+            .map(|food| head.manhattan_distance(food))
+            .sum::<u32>()
+            / self.board.food.len() as u32
     }
 }

@@ -19,8 +19,8 @@ impl Coord {
     }
 
     /// Gets the manhattan distance between two coordinates.
-    pub fn manhattan_distance(&self, other: &Coord) -> i32 {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
+    pub fn manhattan_distance(&self, other: &Coord) -> u32 {
+        (self.x - other.x).unsigned_abs() + (self.y - other.y).unsigned_abs()
     }
 }
 
