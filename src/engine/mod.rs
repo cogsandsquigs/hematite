@@ -66,7 +66,6 @@ impl Engine {
         }
         // If there are no safe moves, choose a random move from all the moves
         else {
-            println!("No safe moves! Choosing a random move.");
             Move::random()
         }
     }
