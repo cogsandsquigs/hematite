@@ -22,9 +22,7 @@ impl Engine {
         moves: HashSet<Move>,
         snake: &Battlesnake,
     ) -> HashSet<Move> {
-        let moves = self.snake_non_trapping_moves(moves, snake);
-
-        moves
+        self.snake_non_trapping_moves(moves, snake)
     }
 
     /// Gets all the moves that will not trap the snake in a space smaller than it. If there
@@ -57,15 +55,16 @@ impl Engine {
 
             // If the number of filled spaces is greater than the largest number of filled
             // spaces, clear the set of moves and add the current move to it.
-            if filled > largest_size {
-                largest_size = filled;
-                largest_set = HashSet::new();
-                largest_set.insert(move_);
-            }
-            // If the number of filled spaces is equal to the largest number of filled
-            // spaces, add the current move to the set.
-            else if filled == largest_size {
-                largest_set.insert(move_);
+            match filled {
+                filled if filled > largest_size => {
+                    largest_size = filled;
+                    largest_set.clear();
+                    largest_set.insert(move_);
+                }
+                filled if filled == largest_size => {
+                    largest_set.insert(move_);
+                }
+                _ => {}
             }
 
             // If the number of filled spaces is less than the snake's length, remove the
@@ -101,12 +100,9 @@ fn floodfill(board: &Board, point: Coord) -> (u32, u32, HashSet<Coord>) {
 
     // While there are still coordinates to check
     while let Some(point) = queue.pop() {
-        // If the coordinate is already filled, skip it
-        if visited.contains(&point) {
-            continue;
-        }
-        // If the coordinate is a snake, skip it
-        else if board.snakes.iter().any(|snake| snake.body.contains(&point)) {
+        // If the coordinate is already filled, or if it is part of a snake, skip it.
+        if visited.contains(&point) || board.snakes.iter().any(|snake| snake.body.contains(&point))
+        {
             continue;
         }
 

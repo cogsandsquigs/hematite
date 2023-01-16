@@ -19,9 +19,9 @@ impl Engine {
     pub fn snake_safe_moves(&self, snake: &Battlesnake) -> HashSet<Move> {
         let moves = Move::all(); // All the moves
         let moves = self.snake_non_intersecting_moves(moves, snake);
-        let moves = self.snake_inside_board_moves(moves, snake);
+        
 
-        moves
+        self.snake_inside_board_moves(moves, snake)
     }
 
     /// Gets all the moves for `snake` that wont intersect other snakes, including itself.

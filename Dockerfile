@@ -6,7 +6,7 @@ FROM rust:1.66-slim
 COPY . .
 
 # Expose the port
-EXPOSE 8000
+EXPOSE 8080
 
 # Install the dependencies
 RUN cargo build --release
