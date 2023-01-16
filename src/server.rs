@@ -53,7 +53,7 @@ impl Server {
 
         info!("Starting game '{id}'!");
 
-        let engine = Engine::new(id.clone(), state.clone());
+        let engine = Engine::new(state.clone());
 
         self.games.insert(id.clone(), engine);
     }

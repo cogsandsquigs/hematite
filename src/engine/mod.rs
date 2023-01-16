@@ -13,10 +13,6 @@ use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
 /// The engine for Hematite.
 #[derive(Debug, Clone)]
 pub struct Engine {
-    /// The ID of the game.
-    #[allow(dead_code)]
-    game_id: String,
-
     /// The board where the game is played.
     board: Board,
 
@@ -32,9 +28,8 @@ pub struct Engine {
 
 impl Engine {
     /// Create a new engine.
-    pub fn new(game_id: String, initial_state: GameState) -> Self {
+    pub fn new(initial_state: GameState) -> Self {
         Self {
-            game_id,
             board: initial_state.board,
             you: initial_state.you,
             mode: Scared,

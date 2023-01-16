@@ -14,27 +14,27 @@ use serde_json::Value;
 use std::env;
 
 #[get("/")]
-async fn handle_index(logic: &State<RwLock<Server>>) -> Json<Value> {
-    Json(logic.read().await.info())
+async fn handle_index(server: &State<RwLock<Server>>) -> Json<Value> {
+    Json(server.read().await.info())
 }
 
 #[post("/start", format = "json", data = "<start_req>")]
-async fn handle_start(logic: &State<RwLock<Server>>, start_req: Json<GameState>) -> Status {
-    logic.write().await.start(&start_req);
+async fn handle_start(server: &State<RwLock<Server>>, start_req: Json<GameState>) -> Status {
+    server.write().await.start(&start_req);
 
     Status::Ok
 }
 
 #[post("/move", format = "json", data = "<move_req>")]
-async fn handle_move(logic: &State<RwLock<Server>>, move_req: Json<GameState>) -> Json<Value> {
-    let response = logic.write().await.get_move(&move_req);
+async fn handle_move(server: &State<RwLock<Server>>, move_req: Json<GameState>) -> Json<Value> {
+    let response = server.write().await.get_move(&move_req);
 
     Json(response)
 }
 
 #[post("/end", format = "json", data = "<end_req>")]
-async fn handle_end(logic: &State<RwLock<Server>>, end_req: Json<GameState>) -> Status {
-    logic.write().await.end(&end_req);
+async fn handle_end(server: &State<RwLock<Server>>, end_req: Json<GameState>) -> Status {
+    server.write().await.end(&end_req);
 
     Status::Ok
 }
@@ -58,7 +58,7 @@ fn rocket() -> _ {
 
     info!("Starting Battlesnake Server...");
 
-    let logic = Server::new();
+    let server = Server::new();
 
     rocket::build()
         .attach(AdHoc::on_response("Server ID Middleware", |_, res| {
@@ -66,7 +66,7 @@ fn rocket() -> _ {
                 res.set_raw_header("Server", "cogsandsquigs/github/hematite");
             })
         }))
-        .manage(RwLock::new(logic))
+        .manage(RwLock::new(server))
         .mount(
             "/",
             routes![handle_index, handle_start, handle_move, handle_end],
