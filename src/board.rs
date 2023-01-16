@@ -82,6 +82,19 @@ impl Move {
             .expect("There should be at least one move.")
     }
 
+    /// Turns two coordinates into a move, based on the difference between them.
+    pub fn from_coords(start: &Coord, end: &Coord) -> Option<Self> {
+        let (x_diff, y_diff) = (end.x - start.x, end.y - start.y);
+
+        match (x_diff, y_diff) {
+            (0, 1) => Some(Self::Up),
+            (0, -1) => Some(Self::Down),
+            (-1, 0) => Some(Self::Left),
+            (1, 0) => Some(Self::Right),
+            _ => None,
+        }
+    }
+
     /// Turns the move into an ending coordinate point given a starting coordinate.
     pub fn to_coord(&self, start: Coord) -> Coord {
         match self {
