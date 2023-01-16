@@ -1,5 +1,9 @@
+use rand::seq::IteratorRandom;
 use rocket::serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use std::{
+    collections::HashSet,
+    fmt::{Display, Formatter},
+};
 
 /// The board where the game is played.
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -25,10 +29,22 @@ pub struct Battlesnake {
 }
 
 /// A coordinate on the board.
-#[derive(Deserialize, Serialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Coord {
     pub x: i32,
     pub y: i32,
+}
+
+impl From<(i32, i32)> for Coord {
+    fn from((x, y): (i32, i32)) -> Self {
+        Self { x, y }
+    }
+}
+
+impl From<Coord> for (i32, i32) {
+    fn from(val: Coord) -> Self {
+        (val.x, val.y)
+    }
 }
 
 /// A move that a snake can make.
@@ -45,6 +61,36 @@ pub enum Move {
 
     #[serde(rename = "right")]
     Right,
+}
+
+impl Move {
+    /// Returns the set of all possible moves.
+    pub fn all() -> HashSet<Move> {
+        [Self::Up, Self::Down, Self::Left, Self::Right]
+            .iter()
+            .copied()
+            .collect()
+    }
+
+    /// Returns a random move.
+    pub fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        let moves = Self::all();
+        *moves
+            .iter()
+            .choose(&mut rng)
+            .expect("There should be at least one move.")
+    }
+
+    /// Turns the move into an ending coordinate point given a starting coordinate.
+    pub fn to_coord(&self, start: Coord) -> Coord {
+        match self {
+            Move::Up => (start.x, start.y + 1).into(),
+            Move::Down => (start.x, start.y - 1).into(),
+            Move::Left => (start.x - 1, start.y).into(),
+            Move::Right => (start.x + 1, start.y).into(),
+        }
+    }
 }
 
 impl Display for Move {
