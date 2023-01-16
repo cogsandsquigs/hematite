@@ -1,8 +1,14 @@
-FROM rust:1.66-alpine
+# Latest rust version, using a slim image
+# Can't use alpine because of musl
+FROM rust:1.66-slim
 
-COPY . /usr/app
-WORKDIR /usr/app
+# Copy over the source code
+COPY . .
 
-RUN cargo install --path .
+# Expose the port
+EXPOSE 8000
 
-CMD ["ferrite"]
+# Install the dependencies
+RUN cargo build --release
+
+CMD ["target/release/ferrite"]
