@@ -17,13 +17,14 @@ use std::collections::HashMap;
 
 /// The structure that handles all the `GET`/`POST` request logic for the game.
 #[derive(Clone)]
-pub struct Logic {
+pub struct Server {
+    /// A map of game IDs to `Engine` instances, which handle the game logic.
     games: HashMap<String, Engine>,
 }
 
-/// Public API for `Logic`.
-impl Logic {
-    /// Creates a new `Logic` instance.
+/// Public API for `Server`.
+impl Server {
+    /// Creates a new `Server` instance.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {

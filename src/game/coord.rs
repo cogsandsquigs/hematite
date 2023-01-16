@@ -17,6 +17,11 @@ impl Coord {
             (self.x + 1, self.y).into(),
         ]
     }
+
+    /// Gets the manhattan distance between two coordinates.
+    pub fn manhattan_distance(&self, other: &Coord) -> i32 {
+        (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
 }
 
 impl From<(i32, i32)> for Coord {
