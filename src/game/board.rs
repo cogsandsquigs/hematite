@@ -1,4 +1,4 @@
-use super::coord::Coord;
+use super::point::Point;
 use rocket::serde::{Deserialize, Serialize};
 
 /// The board where the game is played.
@@ -6,22 +6,22 @@ use rocket::serde::{Deserialize, Serialize};
 pub struct Board {
     pub height: u32,
     pub width: u32,
-    pub food: Vec<Coord>,
+    pub food: Vec<Point>,
     pub snakes: Vec<Battlesnake>,
-    pub hazards: Vec<Coord>,
+    pub hazards: Vec<Point>,
 }
 
 impl Board {
     /// Gets all the orthogonal neighbors of a coordinate point on the board
-    pub fn ortho_neighbors(&self, point: &Coord) -> Vec<Coord> {
+    pub fn ortho_neighbors(&self, point: &Point) -> Vec<Point> {
         let mut neighbors = point.ortho_neighbors();
-        neighbors.retain(|coord| self.is_on_board(coord));
+        neighbors.retain(|point| self.is_on_board(point));
         neighbors
     }
 
     /// Checks if a coordinate is on the board.
-    pub fn is_on_board(&self, coord: &Coord) -> bool {
-        coord.x >= 0 && coord.x < self.width as i32 && coord.y >= 0 && coord.y < self.height as i32
+    pub fn is_on_board(&self, point: &Point) -> bool {
+        point.x >= 0 && point.x < self.width as i32 && point.y >= 0 && point.y < self.height as i32
     }
 }
 
@@ -31,8 +31,8 @@ pub struct Battlesnake {
     pub id: String,
     pub name: String,
     pub health: u32,
-    pub body: Vec<Coord>,
-    pub head: Coord,
+    pub body: Vec<Point>,
+    pub head: Point,
     pub length: u32,
     pub latency: String,
     pub shout: Option<String>,

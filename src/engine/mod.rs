@@ -32,7 +32,7 @@ impl Engine {
         Self {
             board: initial_state.board,
             you: initial_state.you,
-            mode: Scared,
+            mode: Hungry,
             rng: SmallRng::from_entropy(),
         }
     }
@@ -45,6 +45,9 @@ impl Engine {
 
     /// Get the next move for the snake.
     pub fn get_move(&mut self) -> Move {
+        // Update the engine mode.
+        self.update_engine_mode();
+
         // Get the set of immediately safe moves
         let safe_moves = self.engine_safe_moves();
 
@@ -68,11 +71,8 @@ impl Engine {
             };
         }
 
-        self.update_engine_mode();
-
         let moves = match self.mode {
-            Scared => self.scared(moves),
-            _ => moves,
+            Hungry => self.hungry(moves),
         };
 
         // Choose a random move from the set of moves

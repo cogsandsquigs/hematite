@@ -4,35 +4,42 @@ use std::collections::HashSet;
 /// API for using the scared `Mode`.
 impl Engine {
     /// Get all the scared moves for the engine. In this case, it is the set of moves that
-    /// gets it as far away as possible to its tail.
+    /// gets it as far away as possible from other snakes, and as close as possible to food.
     pub fn scared(&self, moves: HashSet<Move>) -> HashSet<Move> {
         let head = &self.you.head;
-        let tail = self
-            .you
-            .body
-            .last()
-            .expect("The snake should always have a tail!");
 
-        let mut max_distance = 0;
-        let mut max_moves = HashSet::new();
+        let mut min_distance = 0;
+        let mut min_moves = HashSet::new();
 
         for move_ in moves {
-            let coord = move_.to_coord(head);
-            let distance = coord.manhattan_distance(tail);
+            let snake_distance: i32 = self
+                .board
+                .snakes
+                .iter()
+                .map(|snake| snake.head.manhattan_distance(head) as i32)
+                .sum();
 
-            match distance {
-                distance if distance > max_distance => {
-                    max_distance = distance;
-                    max_moves.clear();
-                    max_moves.insert(move_);
+            let food_distance: i32 = self
+                .board
+                .food
+                .iter()
+                .map(|food| food.manhattan_distance(head) as i32)
+                .min()
+                .unwrap_or(0);
+
+            match food_distance + snake_distance {
+                distance if distance < min_distance => {
+                    min_distance = distance;
+                    min_moves.clear();
+                    min_moves.insert(move_);
                 }
-                distance if distance == max_distance => {
-                    max_moves.insert(move_);
+                distance if distance == min_distance => {
+                    min_moves.insert(move_);
                 }
                 _ => {}
             }
         }
 
-        max_moves
+        min_moves
     }
 }

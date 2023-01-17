@@ -13,12 +13,12 @@ impl Engine {
             .first()
             .expect("There should always be food!");
 
-        let mut min_distance = i32::MAX;
+        let mut min_distance = u32::MAX;
         let mut min_moves = HashSet::new();
 
         for move_ in moves {
-            let coord = move_.to_coord(head);
-            let distance = coord.manhattan_distance(food);
+            let point = move_.to_coord(head);
+            let distance = point.manhattan_distance(food);
 
             match distance {
                 distance if distance < min_distance => {

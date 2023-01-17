@@ -19,7 +19,6 @@ impl Engine {
     pub fn snake_safe_moves(&self, snake: &Battlesnake) -> HashSet<Move> {
         let moves = Move::all(); // All the moves
         let moves = self.snake_non_intersecting_moves(moves, snake);
-        
 
         self.snake_inside_board_moves(moves, snake)
     }
@@ -35,21 +34,21 @@ impl Engine {
 
         // Flat-map the snakes into a list of all coordinates, and check if the head
         // of the snake is in any of the other snakes' bodies.
-        for coord in self.board.snakes.iter().flat_map(|snake| &snake.body) {
+        for point in self.board.snakes.iter().flat_map(|snake| &snake.body) {
             // Don't check the head of the snake against itself. Its ok to just
             // check if the current coordinate is the head, because the head should
             // never be in the body of the snake, unless the game is over, in which
             // case we don't care about the moves.
-            if coord == head {
+            if point == head {
                 continue;
             }
 
-            // Convert the two coordinates (`coord` and `head`) into a move, and
+            // Convert the two coordinates (`point` and `head`) into a move, and
             // remove it from the list of possible moves.
             // Note that `from_coords` requires that we start at `head` and end at
-            // `coord` for the moves to come out in the right order (e.g. if head is (0, 0)
-            // and coord is (0, 1), the move should be Up, not Down).
-            if let Some(move_) = Move::from_coords(head, coord) {
+            // `point` for the moves to come out in the right order (e.g. if head is (0, 0)
+            // and point is (0, 1), the move should be Up, not Down).
+            if let Some(move_) = Move::from_coords(head, point) {
                 moves.remove(&move_);
             }
         }

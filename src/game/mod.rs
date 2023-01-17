@@ -1,6 +1,6 @@
 pub mod board;
-pub mod coord;
 pub mod moves;
+pub mod point;
 
 use self::board::{Battlesnake, Board};
 use rocket::serde::Deserialize;

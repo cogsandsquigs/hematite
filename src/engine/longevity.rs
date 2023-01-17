@@ -1,8 +1,8 @@
 use super::Engine;
 use crate::game::{
     board::{Battlesnake, Board},
-    coord::Coord,
     moves::Move,
+    point::Point,
 };
 use std::collections::HashSet;
 
@@ -36,7 +36,7 @@ impl Engine {
         let head = &snake.head; // Coordinates of the head
 
         // Coordinates of all possible moves
-        let coords = moves
+        let points = moves
             .iter()
             .map(|&move_| (move_, move_.to_coord(head)))
             .collect::<HashSet<_>>();
@@ -50,7 +50,7 @@ impl Engine {
         // TODO: This is a bit inefficient, because it will floodfill the board multiple
         // times for the same coordinate. It would be better to floodfill the board once,
         // and then check each coordinate against the floodfill.
-        for (move_, point) in coords {
+        for (move_, point) in points {
             let (filled, foods, _) = floodfill(&self.board, point);
 
             // If the number of filled spaces is greater than the largest number of filled
@@ -83,13 +83,47 @@ impl Engine {
             moves
         }
     }
+
+    /// Avoids any spaces that other snake's heads can move into, if the other snake is
+    /// longer than the snake.
+    pub fn snake_head_avoiding_moves(
+        &self,
+        mut moves: HashSet<Move>,
+        snake: &Battlesnake,
+    ) -> HashSet<Move> {
+        let head = &snake.head; // Coordinates of the head
+        let length = snake.length; // Length of the snake
+
+        // All the other snakes on the board
+        let other_snakes = self
+            .board
+            .snakes
+            .iter()
+            .filter(|other| other.id != snake.id)
+            .collect::<Vec<_>>();
+
+        for move_ in moves.clone() {
+            let point = move_.to_coord(head);
+
+            // If the move is into a space that another snake's head can move into, and
+            // the other snake is longer than the snake, remove the move from the set of
+            // possible moves.
+            if other_snakes.iter().any(|other| {
+                other.length > length && self.board.ortho_neighbors(&other.head).contains(&point)
+            }) {
+                moves.remove(&move_);
+            }
+        }
+
+        moves
+    }
 }
 
 /// Floodfills the board from the given coordinates, and returns the number of spaces
 /// that were filled, the number of foods that were found, as well as all the points
 /// visited. This is the number of spaces that the snake can move into, accounting for
 /// growth.
-fn floodfill(board: &Board, point: Coord) -> (u32, u32, HashSet<Coord>) {
+fn floodfill(board: &Board, point: Point) -> (u32, u32, HashSet<Point>) {
     let mut filled = 0;
     let mut foods = 0;
     let mut queue = Vec::new();
