@@ -11,10 +11,4 @@ EXPOSE 8080
 # Install the dependencies
 RUN cargo build --release
 
-# Move the binary to the root
-RUN mv target/release/hematite .
-
-# Delete the /target directory to save space
-RUN rm -rf target
-
-CMD ["hematite"]
+CMD ["target/release/hematite"]
