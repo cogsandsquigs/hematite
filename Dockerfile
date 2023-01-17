@@ -12,9 +12,9 @@ EXPOSE 8080
 RUN cargo build --release
 
 # Move the binary to the root
-RUN mv target/release/hematite hematite
+RUN mv target/release/hematite .
 
 # Delete the /target directory
 RUN rm -rf target
 
-CMD ["target/release/hematite"]
+CMD ["hematite"]
