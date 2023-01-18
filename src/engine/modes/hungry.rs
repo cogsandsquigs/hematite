@@ -18,7 +18,7 @@ impl Engine {
 
         for move_ in moves {
             let point = move_.to_coord(head);
-            let distance = point.manhattan_distance(food);
+            let distance = point.distance(food);
 
             match distance {
                 distance if distance < min_distance => {

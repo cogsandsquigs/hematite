@@ -13,8 +13,8 @@ pub struct Board {
 
 impl Board {
     /// Gets all the orthogonal neighbors of a coordinate point on the board
-    pub fn ortho_neighbors(&self, point: &Point) -> Vec<Point> {
-        let mut neighbors = point.ortho_neighbors();
+    pub fn neighbors(&self, point: &Point) -> Vec<Point> {
+        let mut neighbors = point.neighbors();
         neighbors.retain(|point| self.is_on_board(point));
         neighbors
     }

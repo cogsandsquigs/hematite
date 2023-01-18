@@ -1,6 +1,7 @@
 mod longevity;
 mod modes;
 mod safety;
+mod utils;
 
 use self::modes::Mode::{self, *};
 use crate::game::{
@@ -97,10 +98,5 @@ impl Engine {
         else {
             Move::random()
         }
-    }
-
-    /// Get's the engine's health.
-    pub fn health(&self) -> u32 {
-        self.you.health
     }
 }

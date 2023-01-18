@@ -1,9 +1,5 @@
 use super::Engine;
-use crate::game::{
-    board::{Battlesnake, Board},
-    moves::Move,
-    point::Point,
-};
+use crate::game::{board::Battlesnake, moves::Move};
 use std::collections::HashSet;
 
 /// API for gettting all the long-term safe moves for the engine's snake.
@@ -51,7 +47,7 @@ impl Engine {
         // times for the same coordinate. It would be better to floodfill the board once,
         // and then check each coordinate against the floodfill.
         for (move_, point) in points {
-            let (filled, foods, _) = floodfill(&self.board, point);
+            let (filled, foods, _) = self.floodfill(point);
 
             // If the number of filled spaces is greater than the largest number of filled
             // spaces, clear the set of moves and add the current move to it.
@@ -109,7 +105,7 @@ impl Engine {
             // the other snake is longer than the snake, remove the move from the set of
             // possible moves.
             if other_snakes.iter().any(|other| {
-                other.length > length && self.board.ortho_neighbors(&other.head).contains(&point)
+                other.length > length && self.board.neighbors(&other.head).contains(&point)
             }) {
                 moves.remove(&move_);
             }
@@ -117,46 +113,4 @@ impl Engine {
 
         moves
     }
-}
-
-/// Floodfills the board from the given coordinates, and returns the number of spaces
-/// that were filled, the number of foods that were found, as well as all the points
-/// visited. This is the number of spaces that the snake can move into, accounting for
-/// growth.
-fn floodfill(board: &Board, point: Point) -> (u32, u32, HashSet<Point>) {
-    let mut filled = 0;
-    let mut foods = 0;
-    let mut queue = Vec::new();
-    let mut visited = HashSet::new();
-
-    // Add the starting coordinate to the queue
-    queue.push(point);
-
-    // While there are still coordinates to check
-    while let Some(point) = queue.pop() {
-        // If the coordinate is already filled, or if it is part of a snake, skip it.
-        if visited.contains(&point) || board.snakes.iter().any(|snake| snake.body.contains(&point))
-        {
-            continue;
-        }
-
-        // Add the coordinate to the list of filled coordinates
-        visited.insert(point);
-
-        // Add the coordinates of the adjacent spaces to the queue
-        board
-            .ortho_neighbors(&point)
-            .into_iter()
-            .for_each(|point| queue.push(point));
-
-        // If the coordinate has food, skip it, as we don't want to count it
-        if board.food.contains(&point) {
-            foods += 1;
-        }
-
-        // Increment the number of filled spaces
-        filled += 1;
-    }
-
-    (filled, foods, visited)
 }

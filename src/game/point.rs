@@ -9,7 +9,7 @@ pub struct Point {
 
 impl Point {
     /// Gets all the orthogonal neighbors of the coordinate.
-    pub fn ortho_neighbors(&self) -> Vec<Point> {
+    pub fn neighbors(&self) -> Vec<Point> {
         vec![
             (self.x, self.y + 1).into(),
             (self.x, self.y - 1).into(),
@@ -19,7 +19,7 @@ impl Point {
     }
 
     /// Gets the manhattan distance between two coordinates.
-    pub fn manhattan_distance(&self, other: &Point) -> u32 {
+    pub fn distance(&self, other: &Point) -> u32 {
         (self.x - other.x).unsigned_abs() + (self.y - other.y).unsigned_abs()
     }
 }

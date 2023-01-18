@@ -34,7 +34,7 @@ impl Engine {
         self.board
             .food
             .iter()
-            .map(|food| head.manhattan_distance(food))
+            .map(|food| head.distance(food))
             .sum::<u32>()
             / self.board.food.len() as u32
     }

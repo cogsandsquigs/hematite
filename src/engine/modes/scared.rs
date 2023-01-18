@@ -16,14 +16,14 @@ impl Engine {
                 .board
                 .snakes
                 .iter()
-                .map(|snake| snake.head.manhattan_distance(head) as i32)
+                .map(|snake| snake.head.distance(head) as i32)
                 .sum();
 
             let food_distance: i32 = self
                 .board
                 .food
                 .iter()
-                .map(|food| food.manhattan_distance(head) as i32)
+                .map(|food| food.distance(head) as i32)
                 .min()
                 .unwrap_or(0);
 
