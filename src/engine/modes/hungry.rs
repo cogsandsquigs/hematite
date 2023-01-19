@@ -6,33 +6,25 @@ impl Engine {
     /// Get all the hungry moves for the engine. In this case, it is the set of moves that
     /// gets it as close as possible to food.
     pub fn hungry(&self, moves: HashSet<Move>) -> HashSet<Move> {
-        let head = &self.you.head;
-        let food = self
+        let head = self.you.head;
+
+        let closest_food = self
             .board
             .food
-            .first()
-            .expect("There should always be food!");
+            .iter()
+            .min_by_key(|food| food.distance(&head));
 
-        let mut min_distance = u32::MAX;
-        let mut min_moves = HashSet::new();
+        if let Some(closest_food) = closest_food {
+            let path = self.astar(vec![head], *closest_food);
 
-        for move_ in moves {
-            let point = move_.to_coord(head);
-            let distance = point.distance(food);
-
-            match distance {
-                distance if distance < min_distance => {
-                    min_distance = distance;
-                    min_moves.clear();
-                    min_moves.insert(move_);
-                }
-                distance if distance == min_distance => {
-                    min_moves.insert(move_);
-                }
-                _ => {}
+            if let Some(path) = path {
+                let next = path[1];
+                let move_to_next = Move::from_coords(&head, &next).expect("Move should exist");
+                return moves.into_iter().filter(|m| m == &move_to_next).collect();
             }
         }
-
-        min_moves
+        // If we haven't returned yet, then we can't find a path to food, so we should act scared.
+        // TODO: Act scared
+        moves
     }
 }

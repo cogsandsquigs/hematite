@@ -3,7 +3,7 @@ mod modes;
 mod safety;
 mod utils;
 
-use self::modes::Mode::{self, *};
+use self::modes::Mode;
 use crate::game::{
     board::{Battlesnake, Board},
     moves::Move,
@@ -33,7 +33,7 @@ impl Engine {
         Self {
             board: initial_state.board,
             you: initial_state.you,
-            mode: Hungry,
+            mode: Mode::Hungry,
             rng: SmallRng::from_entropy(),
         }
     }
@@ -73,7 +73,8 @@ impl Engine {
         }
 
         let moves = match self.mode {
-            Hungry => self.hungry(moves),
+            Mode::Scared => self.scared(moves),
+            Mode::Hungry => self.hungry(moves),
         };
 
         // Choose a random move from the set of moves

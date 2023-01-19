@@ -7,8 +7,9 @@ use log::debug;
 /// The different modes the engine can be in.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Mode {
-    // /// The scared mode.
-    // Scared,
+    /// The scared mode.
+    Scared,
+
     /// When the snake is running low on health, it will try to find food.
     Hungry,
 }
@@ -17,11 +18,11 @@ pub enum Mode {
 impl Engine {
     /// Update the mode based on the snake's health.
     pub fn update_engine_mode(&mut self) {
-        // if self.health() <= self.average_distance_to_food() + 10 {
-        //     self.mode = Hungry;
-        // } else {
-        //     self.mode = Scared;
-        // }
+        if self.health() <= self.average_distance_to_food() + 10 {
+            self.mode = Mode::Hungry;
+        } else {
+            self.mode = Mode::Scared;
+        }
 
         // Log the mode.
         debug!("Mode: {:?}", self.mode)
