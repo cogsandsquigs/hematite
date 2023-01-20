@@ -1,45 +1,25 @@
+use itertools::Itertools;
+
 use crate::{engine::Engine, game::moves::Move};
 use std::collections::HashSet;
 
 /// API for using the scared `Mode`.
 impl Engine {
-    /// Get all the scared moves for the engine. In this case, it is the set of moves that
-    /// gets it as far away as possible from other snakes, and as close as possible to food.
+    /// Get all the scared moves for the engine. This is the set of moves that gets it as close
+    /// as possible to its own tail.
     pub fn scared(&self, moves: HashSet<Move>) -> HashSet<Move> {
-        let head = &self.you.head;
+        let head = self.you.head;
+        let tail = self.you.tail();
 
-        let mut min_distance = 0;
-        let mut min_moves = HashSet::new();
-
-        for move_ in moves {
-            let snake_distance: i32 = self
-                .board
-                .snakes
-                .iter()
-                .map(|snake| snake.head.distance(head) as i32)
-                .sum();
-
-            let food_distance: i32 = self
-                .board
-                .food
-                .iter()
-                .map(|food| food.distance(head) as i32)
-                .min()
-                .unwrap_or(0);
-
-            match food_distance + snake_distance {
-                distance if distance < min_distance => {
-                    min_distance = distance;
-                    min_moves.clear();
-                    min_moves.insert(move_);
-                }
-                distance if distance == min_distance => {
-                    min_moves.insert(move_);
-                }
-                _ => {}
-            }
-        }
-
-        min_moves
+        moves
+            .iter()
+            .min_set_by_key(|move_| {
+                let point = move_.to_coord(&head);
+                point.distance(&tail)
+            })
+            .iter()
+            .copied()
+            .copied()
+            .collect()
     }
 }

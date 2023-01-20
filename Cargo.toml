@@ -2,7 +2,7 @@
 	authors = ["Ian Pratt <ianjdpratt@gmail.com>"]
 	edition = "2021"
 	name    = "hematite"
-	version = "0.1.0"
+	version = "0.2.0"
 
 	description = "A Battlesnake written in Rust"
 	keywords    = ["battlesnake"]
@@ -10,6 +10,7 @@
 
 [dependencies]
 	env_logger = "0.9.0"
+	itertools  = "0.10.5"
 	log        = "0.4.0"
 	rand       = { version = "0.8.5", features = ["small_rng"] }
 	rocket     = { version = "0.5.0-rc.1", features = ["json"] }

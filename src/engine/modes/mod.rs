@@ -18,7 +18,7 @@ pub enum Mode {
 impl Engine {
     /// Update the mode based on the snake's health.
     pub fn update_engine_mode(&mut self) {
-        if self.health() <= self.average_distance_to_food() + 10 {
+        if self.health() <= self.board.width + self.board.height {
             self.mode = Mode::Hungry;
         } else {
             self.mode = Mode::Scared;

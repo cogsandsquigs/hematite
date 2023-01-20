@@ -5,7 +5,7 @@ use std::collections::HashSet;
 /// API for gettting all the long-term safe moves for the engine's snake.
 impl Engine {
     /// Get all the long-term safe moves for the engine
-    pub fn engine_longevity_moves(&self, moves: HashSet<Move>) -> HashSet<Move> {
+    pub fn longevity_moves(&self, moves: HashSet<Move>) -> HashSet<Move> {
         self.snake_longevity_moves(moves, &self.you)
     }
 }

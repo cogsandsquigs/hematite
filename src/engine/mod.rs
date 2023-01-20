@@ -9,6 +9,7 @@ use crate::game::{
     moves::Move,
     GameState,
 };
+use log::debug;
 use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
 
 /// The engine for Hematite.
@@ -50,10 +51,11 @@ impl Engine {
         self.update_engine_mode();
 
         // Get the set of immediately safe moves
-        let safe_moves = self.engine_safe_moves();
+        let safe_moves = self.safe_moves();
+        debug!("Safe moves: {:?}", safe_moves);
 
         // Get the set of long-term safe moves
-        let moves = self.engine_longevity_moves(safe_moves.clone());
+        let moves = self.longevity_moves(safe_moves.clone());
 
         // If there are no moves, choose a random move from all safe moves.
         if moves.is_empty() {

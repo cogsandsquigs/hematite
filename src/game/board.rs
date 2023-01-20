@@ -37,3 +37,10 @@ pub struct Battlesnake {
     pub latency: String,
     pub shout: Option<String>,
 }
+
+impl Battlesnake {
+    /// Gets the snake's tail.
+    pub fn tail(&self) -> Point {
+        *self.body.last().expect("All snakes should have a tail.")
+    }
+}

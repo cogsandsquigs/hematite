@@ -5,7 +5,7 @@ use std::collections::HashSet;
 /// API for getting all the immediately safe/non-lethal moves for the engine's snake.
 impl Engine {
     /// Get all the safe moves for the engine
-    pub fn engine_safe_moves(&self) -> HashSet<Move> {
+    pub fn safe_moves(&self) -> HashSet<Move> {
         Move::all()
             .into_iter()
             .filter(|m| !self.is_unsafe(&m.to_coord(&self.you.head)))
@@ -25,12 +25,15 @@ impl Engine {
             || self.is_potential_snake_move(point)
     }
 
-    /// Checks if a point intersects with a snake's body.
+    /// Checks if a point intersects with a snake's body. Excludes the snake's tail, as
+    /// if the snake moves, the tail moves out of the way.
+    /// TODO: Check if the snake's head will eat a food, which means that it is UNSAFE
+    /// to move to the tail.
     pub fn is_snake(&self, point: &Point) -> bool {
         self.board
             .snakes
             .iter()
-            .any(|snake| snake.body.contains(point))
+            .any(|snake| snake.body[..snake.body.len() - 1].contains(point))
     }
 
     /// Checks if a point could be a space a snake moves to. If the point could be
