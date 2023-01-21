@@ -7,10 +7,12 @@ impl Engine {
     pub fn hazard_moves(&mut self) {
         let head = self.you.head;
 
-        self.moves.into_iter().for_each(|(move_, _)| {
-            self.moves
-                .multiply(move_, 1.0 - self.is_hazardous(&move_.to_coord(&head)));
-        });
+        for (move_, _) in self.moves {
+            let point = move_.to_coord(&head);
+            let risk = self.is_hazardous(&point);
+
+            self.moves.add(move_, risk);
+        }
     }
 
     /// Checks if a point is a hazardous point. A hazardous point is a point that is
@@ -22,11 +24,11 @@ impl Engine {
         let mut risk = 0.0;
 
         if self.is_potential_snake_move(point) {
-            risk += 0.5;
+            risk += 0.7;
         }
 
-        if !self.is_non_trapping(point) {
-            risk += 0.5;
+        if self.is_trapping(point) {
+            risk += f32::INFINITY;
         }
 
         risk
@@ -34,9 +36,9 @@ impl Engine {
 
     /// Checks if a point will trap a snake. A point traps a snake if it leads to a space
     /// which has an area smaller than the snake's body plus any food inside the area.
-    fn is_non_trapping(&self, point: &Point) -> bool {
+    fn is_trapping(&self, point: &Point) -> bool {
         let (area, food) = self.floodfill(point);
-        area >= self.you.body.len() as u32 + food
+        area < self.you.body.len() as u32 + food
     }
 
     /// Checks if a point could be a space a snake moves to. If the point could be

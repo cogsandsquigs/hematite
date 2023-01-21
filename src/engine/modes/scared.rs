@@ -1,25 +1,27 @@
+use crate::engine::Engine;
 use itertools::Itertools;
-
-use crate::{engine::Engine, game::moves::Move};
-use std::collections::HashSet;
 
 /// API for using the scared `Mode`.
 impl Engine {
     /// Get all the scared moves for the engine. This is the set of moves that gets it as close
     /// as possible to its own tail.
-    pub fn scared(&self, moves: HashSet<Move>) -> HashSet<Move> {
+    pub fn scared(&mut self) {
         let head = self.you.head;
         let tail = self.you.tail();
 
-        moves
-            .iter()
-            .min_set_by_key(|move_| {
+        let others = self
+            .moves
+            .into_iter()
+            // Get the moves that are closest to the tail
+            .min_set_by_key(|(move_, _)| {
                 let point = move_.to_coord(&head);
                 point.distance(&tail)
             })
             .iter()
-            .copied()
-            .copied()
-            .collect()
+            // Set all the other moves to infinity
+            .map(|&(move_, _)| move_)
+            .collect::<Vec<_>>();
+
+        self.moves.others_to_infinity(&others);
     }
 }

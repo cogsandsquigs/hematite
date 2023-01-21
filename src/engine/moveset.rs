@@ -1,16 +1,15 @@
 use crate::game::moves::Move;
 use std::array::IntoIter;
 
-/// The set of moves that a snake can make. These are all weighted using floats.
-/// The higher the weight, the more likely the snake is to make that move. The
-/// order of the moves is the same as the order of the moves in the `Move` enum.
-/// The sum of all the weights should be 1.
+/// The set of moves that a snake can make. These all have a risk factor associated with
+/// them. The higher the risk, the less likely the snake will make that move. The order
+/// of the moves is the same as the order of the moves in the `Move` enum.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MoveSet {
-    pub up: f32,
-    pub down: f32,
-    pub left: f32,
-    pub right: f32,
+    up: f32,
+    down: f32,
+    left: f32,
+    right: f32,
 }
 
 impl MoveSet {
@@ -25,42 +24,47 @@ impl MoveSet {
     }
 
     /// Multiplies all the weights by a given factor.
-    pub fn multiply(&mut self, move_: Move, factor: f32) {
+    pub fn multiply(&mut self, move_: &Move, risk: f32) {
         match move_ {
-            Move::Up => self.up *= factor,
-            Move::Down => self.down *= factor,
-            Move::Left => self.left *= factor,
-            Move::Right => self.right *= factor,
+            Move::Up => self.up *= risk,
+            Move::Down => self.down *= risk,
+            Move::Left => self.left *= risk,
+            Move::Right => self.right *= risk,
         }
     }
 
-    /// Adds a tuple or array of tuples to all the nonzero weights. This is necessary
-    /// because if a weight is zero, we have declared it to be an impossible move.
-    pub fn add_nonzero(&mut self, weights: impl IntoIterator<Item = (Move, f32)>) {
-        for (move_, weight) in weights {
-            match move_ {
-                Move::Up => {
-                    if self.up != 0. {
-                        self.up += weight;
-                    }
-                }
-                Move::Down => {
-                    if self.down != 0. {
-                        self.down += weight;
-                    }
-                }
-                Move::Left => {
-                    if self.left != 0. {
-                        self.left += weight;
-                    }
-                }
-                Move::Right => {
-                    if self.right != 0. {
-                        self.right += weight;
-                    }
-                }
-            }
+    /// Adds a tuple or array of tuples to all the weights.
+    pub fn add(&mut self, move_: Move, risk: f32) {
+        match move_ {
+            Move::Up => self.up += risk,
+            Move::Down => self.down += risk,
+            Move::Left => self.left += risk,
+            Move::Right => self.right += risk,
         }
+    }
+
+    // Turns all other moves to infinity. Effectively makes them impossible to choose.
+    pub fn others_to_infinity(&mut self, moves: &[Move]) {
+        self.up += if moves.contains(&Move::Up) {
+            0.
+        } else {
+            f32::INFINITY
+        };
+        self.down += if moves.contains(&Move::Down) {
+            0.
+        } else {
+            f32::INFINITY
+        };
+        self.left += if moves.contains(&Move::Left) {
+            0.
+        } else {
+            f32::INFINITY
+        };
+        self.right += if moves.contains(&Move::Right) {
+            0.
+        } else {
+            f32::INFINITY
+        };
     }
 
     /// Sums all the weights.

@@ -9,8 +9,7 @@ impl Engine {
 
         self.moves.into_iter().for_each(|(move_, _)| {
             if self.is_unsafe(&move_.to_coord(&head)) {
-                println!("Unsafe move: {:?}", move_);
-                self.moves.multiply(move_, 0.);
+                self.moves.multiply(&move_, f32::INFINITY);
             }
         });
     }

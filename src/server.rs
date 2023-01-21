@@ -74,7 +74,14 @@ impl Server {
         info!("Calculating move...");
 
         let id = &state.game.id;
-        let engine = self.games.get_mut(id).unwrap();
+        let engine = if let Some(engine) = self.games.get_mut(id) {
+            engine
+        } else {
+            info!("Creating new engine for game '{id}'");
+            let engine = Engine::new(state.clone());
+            self.games.insert(id.clone(), engine);
+            self.games.get_mut(id).unwrap()
+        };
 
         engine.update(state.clone());
         let chosen = engine.get_move();
