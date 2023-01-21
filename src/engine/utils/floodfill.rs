@@ -6,14 +6,14 @@ impl Engine {
     /// that were filled, the number of foods that were found, as well as all the points
     /// visited. This is the number of spaces that the snake can move into, accounting for
     /// growth.
-    pub fn floodfill(&self, point: Point) -> (u32, u32, HashSet<Point>) {
+    pub fn floodfill(&self, point: &Point) -> (u32, u32) {
         let mut filled = 0;
         let mut foods = 0;
         let mut queue = Vec::new();
         let mut visited = HashSet::new();
 
         // Add the starting coordinate to the queue
-        queue.push(point);
+        queue.push(*point);
 
         // While there are still coordinates to check
         while let Some(point) = queue.pop() {
@@ -40,6 +40,6 @@ impl Engine {
             filled += 1;
         }
 
-        (filled, foods, visited)
+        (filled, foods)
     }
 }

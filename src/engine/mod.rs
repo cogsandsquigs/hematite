@@ -1,9 +1,10 @@
-mod longevity;
+mod hazards;
 mod modes;
+mod moveset;
 mod safety;
 mod utils;
 
-use self::modes::Mode;
+use self::{modes::Mode, moveset::MoveSet};
 use crate::game::{
     board::{Battlesnake, Board},
     moves::Move,
@@ -26,6 +27,9 @@ pub struct Engine {
 
     /// The random number generator for the engine.
     rng: SmallRng,
+
+    /// The set of moves that the snake can make.
+    moves: MoveSet,
 }
 
 impl Engine {
@@ -36,6 +40,7 @@ impl Engine {
             you: initial_state.you,
             mode: Mode::Hungry,
             rng: SmallRng::from_entropy(),
+            moves: MoveSet::new(),
         }
     }
 
@@ -43,6 +48,7 @@ impl Engine {
     pub fn update(&mut self, state: GameState) {
         self.board = state.board;
         self.you = state.you;
+        self.moves = MoveSet::new();
     }
 
     /// Get the next move for the snake.
@@ -50,56 +56,31 @@ impl Engine {
         // Update the engine mode.
         self.update_engine_mode();
 
-        // Get the set of immediately safe moves
-        let safe_moves = self.safe_moves();
-        debug!("Safe moves: {:?}", safe_moves);
+        // Update the moveset with probabilities for safe moves.
+        self.safe_moves();
 
-        // Get the set of long-term safe moves
-        let moves = self.longevity_moves(safe_moves.clone());
+        debug!("Safe moveset: {:?}", self.moves);
 
-        // If there are no moves, choose a random move from all safe moves.
-        if moves.is_empty() {
-            // If there are no moves, choose a random move from all safe moves
-            return if let Some(chosen) = safe_moves
-                .into_iter()
-                .collect::<Vec<_>>()
-                .choose(&mut self.rng)
-                .copied()
-            {
-                chosen
+        // Update the moveset with probabilities for moves that will make the snake
+        // live longer.
+        self.hazard_moves();
+
+        debug!("Moveset: {:?}", self.moves);
+
+        // Get a random move weighted by the moveset.
+        match self
+            .moves
+            .as_vec()
+            .choose_weighted(&mut self.rng, |(_, weight)| *weight)
+        {
+            Ok((move_, _)) => *move_,
+            Err(error) => {
+                debug!("No move available: {error}");
+
+                *Move::all()
+                    .choose(&mut self.rng)
+                    .expect("There should always be a move")
             }
-            // If there are no safe moves, choose a random move from all the moves
-            else {
-                Move::random()
-            };
-        }
-
-        let moves = match self.mode {
-            Mode::Scared => self.scared(moves),
-            Mode::Hungry => self.hungry(moves),
-        };
-
-        // Choose a random move from the set of moves
-        if let Some(chosen) = moves
-            .into_iter()
-            .collect::<Vec<_>>()
-            .choose(&mut self.rng)
-            .copied()
-        {
-            chosen
-        }
-        // If there are no moves, choose a random move from all safe moves
-        else if let Some(chosen) = safe_moves
-            .into_iter()
-            .collect::<Vec<_>>()
-            .choose(&mut self.rng)
-            .copied()
-        {
-            chosen
-        }
-        // If there are no safe moves, choose a random move from all the moves
-        else {
-            Move::random()
         }
     }
 }

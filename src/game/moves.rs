@@ -1,10 +1,7 @@
 use super::point::Point;
 use rand::seq::IteratorRandom;
 use rocket::serde::{Deserialize, Serialize};
-use std::{
-    collections::HashSet,
-    fmt::{Display, Formatter},
-};
+use std::fmt::{Display, Formatter};
 
 /// A move that a snake can make.
 #[derive(Deserialize, Serialize, Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -24,11 +21,8 @@ pub enum Move {
 
 impl Move {
     /// Returns the set of all possible moves.
-    pub fn all() -> HashSet<Move> {
+    pub fn all() -> [Move; 4] {
         [Self::Up, Self::Down, Self::Left, Self::Right]
-            .iter()
-            .copied()
-            .collect()
     }
 
     /// Returns a random move.
