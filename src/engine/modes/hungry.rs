@@ -21,7 +21,7 @@ impl Engine {
                 let move_to_next = Move::from_coords(&head, &next).expect("Move should exist");
 
                 // Set all the other moves to infinity
-                self.moves.others_to_infinity(&[move_to_next]);
+                self.moves.invalidate_others_many(&[move_to_next]);
             }
         }
 

@@ -9,29 +9,17 @@ impl Engine {
 
         for (move_, _) in self.moves {
             let point = move_.to_coord(&head);
-            let risk = self.is_hazardous(&point);
 
-            self.moves.add(move_, risk);
+            if self.is_hazardous(&point) {
+                self.moves.invalidate(&move_);
+            }
         }
     }
 
     /// Checks if a point is a hazardous point. A hazardous point is a point that is
-    /// possibly safe to move to, but has some risk associated with it. Unlike `is_unsafe`,
-    /// this function returns a `f32` which represents the risk associated with the point.
-    /// A point with a risk of `0.` is completely safe, and a point with a risk of `1.`
-    /// is completely unsafe.
-    pub fn is_hazardous(&self, point: &Point) -> f32 {
-        let mut risk = 0.0;
-
-        if self.is_potential_snake_move(point) {
-            risk += 0.7;
-        }
-
-        if self.is_trapping(point) {
-            risk += f32::INFINITY;
-        }
-
-        risk
+    /// possibly safe to move to, but has some risk associated with it.
+    pub fn is_hazardous(&self, point: &Point) -> bool {
+        self.is_potential_snake_move(point) || self.is_trapping(point)
     }
 
     /// Checks if a point will trap a snake. A point traps a snake if it leads to a space

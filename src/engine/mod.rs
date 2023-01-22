@@ -10,8 +10,12 @@ use crate::game::{
     moves::Move,
     GameState,
 };
-use log::debug;
-use rand::{distributions::WeightedError, rngs::SmallRng, seq::SliceRandom, SeedableRng};
+use log::{debug, warn};
+use rand::{
+    rngs::SmallRng,
+    seq::{IteratorRandom, SliceRandom},
+    SeedableRng,
+};
 
 /// The engine for Hematite.
 #[derive(Debug, Clone)]
@@ -82,40 +86,34 @@ impl Engine {
         // Get a random move weighted by the moveset.
         match self
             .moves
-            .as_vec()
-            .choose_weighted(&mut self.rng, |(_, weight)| 1.0 / (1.0 + *weight))
+            .into_iter()
+            .filter_map(|(move_, valid)| if valid { Some(move_) } else { None })
+            .choose(&mut self.rng)
         {
             // If everything is Ok, return the move.
-            Ok((move_, _)) => *move_,
+            Some(move_) => move_,
 
             // If all the moves have zero weight, return a random *safe* move.
-            Err(WeightedError::AllWeightsZero) => {
-                debug!("All moves have zero weight - choosing a random safe move");
+            None => {
+                warn!("No move available, falling back to safe moves");
 
                 // Get a random move weighted by the moveset.
                 match safe_moves
-                    .as_vec()
-                    .choose_weighted(&mut self.rng, |(_, weight)| 1.0 / (1.0 + *weight))
+                    .into_iter()
+                    .filter_map(|(move_, valid)| if valid { Some(move_) } else { None })
+                    .choose(&mut self.rng)
                 {
                     // If everything is Ok, return the move.
-                    Ok((move_, _)) => *move_,
+                    Some(move_) => move_,
 
-                    Err(error) => {
-                        debug!("No move available: {error}");
+                    None => {
+                        warn!("No move available, falling back to random move");
 
                         *Move::all()
                             .choose(&mut self.rng)
                             .expect("There should always be a move")
                     }
                 }
-            }
-
-            Err(error) => {
-                debug!("No move available: {error}");
-
-                *Move::all()
-                    .choose(&mut self.rng)
-                    .expect("There should always be a move")
             }
         }
     }

@@ -11,7 +11,7 @@
 // For more info see docs.battlesnake.com
 
 use crate::{engine::Engine, game::GameState};
-use log::info;
+use log::{info, warn};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -77,7 +77,8 @@ impl Server {
         let engine = if let Some(engine) = self.games.get_mut(id) {
             engine
         } else {
-            info!("Creating new engine for game '{id}'");
+            warn!("No engine found for game '{id}'!");
+            warn!("Creating new engine...");
             let engine = Engine::new(state.clone());
             self.games.insert(id.clone(), engine);
             self.games.get_mut(id).unwrap()

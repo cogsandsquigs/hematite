@@ -9,7 +9,7 @@ impl Engine {
 
         self.moves.into_iter().for_each(|(move_, _)| {
             if self.is_unsafe(&move_.to_coord(&head)) {
-                self.moves.multiply(&move_, f32::INFINITY);
+                self.moves.invalidate(&move_);
             }
         });
     }

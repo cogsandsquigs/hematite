@@ -9,7 +9,7 @@ impl Engine {
         let head = self.you.head;
         let tail = self.you.tail();
 
-        let others = self
+        let moves = self
             .moves
             .into_iter()
             // Get the moves that are closest to the tail
@@ -18,10 +18,9 @@ impl Engine {
                 point.distance(&tail)
             })
             .iter()
-            // Set all the other moves to infinity
-            .map(|&(move_, _)| move_)
+            .map(|(move_, _)| *move_)
             .collect::<Vec<_>>();
 
-        self.moves.others_to_infinity(&others);
+        self.moves.invalidate_others_many(&moves);
     }
 }
