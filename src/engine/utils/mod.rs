@@ -20,10 +20,10 @@ impl Engine {
     pub fn cost(&self, point: &Point) -> i32 {
         if self.board.food.contains(point) {
             // If the point has food, it is a valid move, but with a cost of -1.
-            -1
+            -5
         } else {
             // If the point is empty, it is a valid move, but with a cost of 0.
-            0
+            1
         }
     }
 }

@@ -10,7 +10,7 @@
 // To get you started we've included code to prevent your Battlesnake from moving backwards.
 // For more info see docs.battlesnake.com
 
-use crate::{engine::Engine, game::GameState};
+use crate::{configuration::Config, engine::Engine, game::GameState};
 use log::{info, warn};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -18,6 +18,10 @@ use std::collections::HashMap;
 /// The structure that handles all the `GET`/`POST` request logic for the game.
 #[derive(Clone)]
 pub struct Server {
+    /// The configuration for the battlesnake itself and/or the engine. Loaded when
+    /// a new server is created.
+    config: Config,
+
     /// A map of game IDs to `Engine` instances, which handle the game logic.
     games: HashMap<String, Engine>,
 }
@@ -28,6 +32,7 @@ impl Server {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
+            config: Config::load(),
             games: HashMap::new(),
         }
     }
@@ -38,12 +43,38 @@ impl Server {
     pub fn info(&self) -> Value {
         info!("INFO");
 
+        // The author of the Battlesnake - A.K.A. me!
+        let author = self.config.battlesnake_username.as_str();
+
+        // If the `debug_assertions` feature is enabled, the snake will be pink, showing that it is
+        // in debug/development mode. Otherwise, it will be its usual color, showing that it is in
+        // release mode.
+        let color = if cfg!(debug_assertions) {
+            self.config
+                .snake
+                .debug_color
+                .as_deref()
+                .unwrap_or("#ff00ff")
+        } else {
+            self.config.snake.color.as_str()
+        };
+
+        // The head of the Battlesnake.
+        let head = self.config.snake.head.as_str();
+
+        // The tail of the Battlesnake.
+        let tail = self.config.snake.tail.as_str();
+
+        // The version of the Battlesnake - A.K.A. the version of the crate.
+        let version = env!("CARGO_PKG_VERSION");
+
         json!({
             "apiversion": "1",
-            "author": "cogsandsquigs",
-            "color": "#0e0d0b",
-            "head": "sand-worm",
-            "tail": "sharp",
+            "author": author,
+            "color": color,
+            "head": head,
+            "tail": tail,
+            "version": version,
         })
     }
 

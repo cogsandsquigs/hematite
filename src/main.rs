@@ -1,3 +1,4 @@
+pub mod configuration;
 pub mod engine;
 pub mod game;
 pub mod server;
