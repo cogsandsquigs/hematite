@@ -15,8 +15,11 @@ impl Engine {
     pub fn astar_find(&self, starts: &[Point], end: &Point) -> Option<Vec<Point>> {
         // The queue of positions to check. Initialized with the starting positions.
         let mut search_queue: BinaryHeap<Reverse<WeightedPoint>> = BinaryHeap::new();
-        // The score of every point we have encountered.
-        let mut scores: HashMap<Point, i32> = HashMap::new();
+        // The best-case cost of moving to a point from the start.
+        let mut g_scores: HashMap<Point, i32> = HashMap::new();
+        // The approximate cost of moving to the end from the start, using the
+        // path from the start to the point.
+        let mut f_scores: HashMap<Point, i32> = HashMap::new();
         // The map from a point to the point it came from with the best path.
         let mut came_from: HashMap<Point, Point> = HashMap::new();
 
@@ -29,21 +32,16 @@ impl Engine {
             .for_each(|point| search_queue.push(point));
 
         // Initialize the scores of the starting positions to their distance from the end.
-        starts
-            .iter()
-            .map(|&point| (point, point.distance(end) as i32))
-            .for_each(|(point, score)| {
-                scores.insert(point, score);
-            });
+        starts.iter().for_each(|point| {
+            g_scores.insert(*point, 0);
+            f_scores.insert(*point, point.distance(end) as i32);
+        });
 
-        while let Some(Reverse(WeightedPoint {
-            point,
-            weight: point_score,
-        })) = search_queue.pop()
-        {
+        while let Some(Reverse(WeightedPoint { point, .. })) = search_queue.pop() {
             println!("b");
             // If we have found the end, return the path.
             if &point == end {
+                println!("end");
                 let mut path = vec![*end];
                 let mut current = *end;
 
@@ -61,17 +59,17 @@ impl Engine {
                 println!("c");
                 // The tentative score is the current score of `point`, plus the point's own score, *plus*
                 // the distance from the neighbor to the end.
-                let tentative_score =
-                    point_score + self.score(&neighbor) + point.distance(&neighbor) as i32;
+                let tentative_g_score = g_scores[&point] + self.score(&neighbor);
 
                 // If the neighbor has not been encountered yet, or the tentative score is better than the
                 // current score, update the score and the came_from map.
-                if !scores.contains_key(&neighbor) || tentative_score < scores[&neighbor] {
-                    // Update the score.
-                    scores.insert(neighbor, tentative_score);
+                if !g_scores.contains_key(&neighbor) || tentative_g_score < g_scores[&neighbor] {
+                    // Update the scores.
+                    g_scores.insert(neighbor, tentative_g_score);
+                    f_scores.insert(neighbor, tentative_g_score + neighbor.distance(end) as i32);
 
                     // Insert into the search queue.
-                    search_queue.push(Reverse(WeightedPoint::new(neighbor, tentative_score)));
+                    search_queue.push(Reverse(WeightedPoint::new(neighbor, tentative_g_score)));
 
                     // Insert into the came_from map, so that if we find the end, we can trace back the path.
                     came_from.insert(neighbor, point);
