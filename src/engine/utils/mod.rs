@@ -1,42 +1,37 @@
 pub mod astar;
-pub mod floodfill;
-pub mod heap_item;
 
 use super::Engine;
-use crate::game::point::Point;
+use crate::game::moves::Move;
+use log::{info, warn};
+use rand::seq::IteratorRandom;
 
-/// General utilities for the Hematite engine.
+/// Miscellaneous utility functions for the engine.
 impl Engine {
-    /// Get's the engine's health.
-    pub fn health(&self) -> u32 {
-        self.you.health
-    }
-}
+    /// Returns a random move. It will try to make the move safe, but if there is no safe move available,
+    /// it will return a random move regardless of safety.
+    pub fn random_move(&self) -> Move {
+        info!("Choosing a random safe move.");
 
-/// General `Point` utilities for the Hematite engine.
-impl Engine {
-    /// Gets the cost of moving to a certain point, assuming that the point you are moving
-    /// from is a neighbor of the point you are moving to.
-    pub fn cost(&self, point: &Point) -> i32 {
-        let mut cost = 1;
-
-        if self.board.food.contains(point) {
-            // If the point is a food, then it is a good move, so it is rewarded accordingly.
-            cost -= 5;
-        }
-
-        if self
-            .board
-            .snakes
+        let safe_move = self
+            .you
+            .head
+            .neighbors()
             .iter()
-            .flat_map(|s| s.head.neighbors())
-            .any(|p| &p == point)
-        {
-            // If the point crosses right in front of a snake's head, it is a valid, but risky, move, so it
-            // is punished accordingly.
-            cost += 10;
-        }
+            .filter(|&n| self.is_safe(n))
+            .choose(&mut rand::thread_rng())
+            .copied();
 
-        cost
+        if let Some(safe_move) = safe_move {
+            Move::from_coords(&self.you.head, &safe_move)
+                .expect("A* paths should generate valid moves.")
+        } else {
+            warn!("There are no safe moves available. Returning a random move.");
+
+            Move::all()
+                .iter()
+                .choose(&mut rand::thread_rng())
+                .copied()
+                .expect("There should always be a move available.")
+        }
     }
 }

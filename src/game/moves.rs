@@ -1,5 +1,4 @@
 use super::point::Point;
-use rand::seq::IteratorRandom;
 use rocket::serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
@@ -23,16 +22,6 @@ impl Move {
     /// Returns the set of all possible moves.
     pub fn all() -> [Move; 4] {
         [Self::Up, Self::Down, Self::Left, Self::Right]
-    }
-
-    /// Returns a random move.
-    pub fn random() -> Self {
-        let mut rng = rand::thread_rng();
-        let moves = Self::all();
-        *moves
-            .iter()
-            .choose(&mut rng)
-            .expect("There should be at least one move.")
     }
 
     /// Turns two coordinates into a move, based on the difference between them.

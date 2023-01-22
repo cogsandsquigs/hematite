@@ -1,31 +1,48 @@
-use crate::{engine::Engine, game::moves::Move};
+// Controlls when the snake decides that it's hungry, and *needs* to eat. Specifically, when the snake
+// is hungry, it will move towards the nearest food, even if it means moving into a wall.
 
-/// API for using the hungry `Mode`.
+use crate::{
+    engine::Engine,
+    game::{moves::Move, point::Point},
+};
+
+/// Engine API for hungry moves.
 impl Engine {
-    /// Get all the hungry moves for the engine. In this case, it is the set of moves that
-    /// gets it as close as possible to food.
-    pub fn hungry(&mut self) {
-        let head = self.you.head;
+    /// Returns the move the snake should make when it's hungry.
+    pub fn hungry_move(&self) -> Move {
+        // Get all the neighbors which are safe to move into.
+        let neighbors: Vec<Point> = self
+            .you
+            .head
+            .neighbors()
+            .iter()
+            .filter(|&n| self.is_safe(n))
+            .copied()
+            .collect();
 
-        let closest_food = self
+        // Get the nearest food.
+        let Some(nearest_food) = self
             .board
             .food
             .iter()
-            .min_by_key(|food| food.distance(&head));
+            .min_by_key(|f| f.distance(&self.you.head))
+        else {
+            // If there is no nearest food, return a random move.
+            return self.random_move();
+        };
 
-        if let Some(closest_food) = closest_food {
-            let path = self.astar(vec![head], *closest_food);
+        // Pathfind to the nearest food. If there is no path to the nearest food, return a random move.
+        let Some(path) = self.astar_find(&neighbors, nearest_food) else {
+            return self.random_move();
+        };
 
-            if let Some(path) = path {
-                let next = path[1];
-                let move_to_next = Move::from_coords(&head, &next).expect("Move should exist");
+        // Return the next move in the path.
+        Move::from_coords(&self.you.head, &path[0]).expect("A* paths should generate valid moves.")
+    }
 
-                // Set all the other moves to infinity
-                self.moves.invalidate_others_many(&[move_to_next]);
-            }
-        }
-
-        // If we haven't returned yet, then we can't find a path to food, so we should act scared.
-        // TODO: Act scared
+    /// Returns true if the snake is hungry. this is when the snake is below 50 health, or it's the
+    /// first 50 turns of the game.
+    pub fn is_hungry(&self) -> bool {
+        self.turn <= self.config.hungry_moves || self.you.health < 50
     }
 }

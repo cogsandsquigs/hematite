@@ -1,8 +1,9 @@
 pub mod board;
 pub mod moves;
 pub mod point;
+pub mod snake;
 
-use self::board::{Battlesnake, Board};
+use self::{board::Board, snake::Snake};
 use rocket::serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
@@ -23,5 +24,5 @@ pub struct GameState {
     pub game: Game,
     pub turn: u32,
     pub board: Board,
-    pub you: Battlesnake,
+    pub you: Snake,
 }

@@ -1,4 +1,4 @@
-use super::point::Point;
+use super::{point::Point, snake::Snake};
 use rocket::serde::{Deserialize, Serialize};
 
 /// The board where the game is played.
@@ -7,7 +7,7 @@ pub struct Board {
     pub height: u32,
     pub width: u32,
     pub food: Vec<Point>,
-    pub snakes: Vec<Battlesnake>,
+    pub snakes: Vec<Snake>,
     pub hazards: Vec<Point>,
 }
 
@@ -25,30 +25,10 @@ impl Board {
     }
 
     /// Gets all the other snakes on the board.
-    pub fn other_snakes(&self, you: &Battlesnake) -> Vec<&Battlesnake> {
+    pub fn other_snakes(&self, you: &Snake) -> Vec<&Snake> {
         self.snakes
             .iter()
             .filter(|snake| snake.id != you.id)
             .collect()
-    }
-}
-
-/// A battlesnake.
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Battlesnake {
-    pub id: String,
-    pub name: String,
-    pub health: u32,
-    pub body: Vec<Point>,
-    pub head: Point,
-    pub length: u32,
-    pub latency: String,
-    pub shout: Option<String>,
-}
-
-impl Battlesnake {
-    /// Gets the snake's tail.
-    pub fn tail(&self) -> Point {
-        *self.body.last().expect("All snakes should have a tail.")
     }
 }

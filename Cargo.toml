@@ -8,14 +8,16 @@
 	version     = "0.2.1"
 
 	[package.metadata]
-		battlesnake_username = "cogsandsquigs" # My Battlesnake username
+		battlesnake_username = "cogsandsquigs" # My Snake username
 
 		[package.metadata.snake]
-			color       = "#0e0d0b"   # The color of Hematite's body
-			debug_color = "#ff00ff"   # The color when Hematite is being debugged/in development mode
-			head        = "sand-worm" # The head of Hematite
-			tail        = "sharp"     # The tail of Hematite
+			color       = "#0e0d0b"     # The color of Hematite's body
+			debug_color = "#ff00ff"     # The color when Hematite is being debugged/in development mode
+			head        = "all-seeing"  # The head of Hematite
+			tail        = "mystic-moon" # The tail of Hematite
 
+		[package.metadata.engine]
+			hungry_moves = 50 # Stay hungry for the first 50 moves
 [dependencies]
 	# Server and logging
 	env_logger = "0.9.0"                                         # For logging
@@ -28,6 +30,5 @@
 	serde_json = "1.0.59"                                       # Parsing JSON
 	toml       = "0.5.11"                                       # Parsing TOML
 
-	# Miscellaneous
-	itertools = "0.10.5"                                                 # For iterating over collections
-	rand      = { version = "0.8.5", features = ["alloc", "small_rng"] }
+	# Misc.
+	rand = { version = "0.8.5", features = ["small_rng"] }

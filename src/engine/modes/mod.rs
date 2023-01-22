@@ -1,42 +1,25 @@
 pub mod hungry;
-pub mod scared;
 
 use super::Engine;
-use log::debug;
 
-/// The different modes the engine can be in.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// The different modes the snake can be in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
-    /// The scared mode.
-    Scared,
-
-    /// When the snake is running low on health, it will try to find food.
+    /// The snake is hungry and wants to eat food.
     Hungry,
+
+    /// The snake is using minimax/tree search to find the best move.
+    Searching,
 }
 
-/// API for updating the `Mode`.
+/// Engine API for modes.
 impl Engine {
-    /// Update the mode based on the snake's health.
-    pub fn update_engine_mode(&mut self) {
-        if self.health() <= self.board.width + self.board.height {
-            self.mode = Mode::Hungry;
+    /// Update the mode of the engine.
+    pub fn update_mode(&mut self) {
+        self.mode = if self.is_hungry() {
+            Mode::Hungry
         } else {
-            self.mode = Mode::Scared;
-        }
-
-        // Log the mode.
-        debug!("Mode: {:?}", self.mode)
-    }
-
-    /// Get the average distance to the food.
-    pub fn average_distance_to_food(&self) -> u32 {
-        let head = self.you.head;
-
-        self.board
-            .food
-            .iter()
-            .map(|food| head.distance(food))
-            .sum::<u32>()
-            / self.board.food.len() as u32
+            Mode::Searching
+        };
     }
 }

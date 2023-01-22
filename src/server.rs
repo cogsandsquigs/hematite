@@ -5,9 +5,9 @@
 //  |    |   \ / __ \|  |  |  | |  |_\  ___/ \___ \|   |  \/ __ \|    <\  ___/
 //  |________/(______/__|  |__| |____/\_____>______>___|__(______/__|__\\_____>
 //
-// This file can be a nice home for your Battlesnake logic and helper functions.
+// This file can be a nice home for your Snake logic and helper functions.
 //
-// To get you started we've included code to prevent your Battlesnake from moving backwards.
+// To get you started we've included code to prevent your Snake from moving backwards.
 // For more info see docs.battlesnake.com
 
 use crate::{configuration::Config, engine::Engine, game::GameState};
@@ -37,13 +37,13 @@ impl Server {
         }
     }
 
-    // info is called when you create your Battlesnake on play.battlesnake.com
-    // and controls your Battlesnake's appearance
-    // TIP: If you open your Battlesnake URL in a browser you should see this data
+    // info is called when you create your Snake on play.battlesnake.com
+    // and controls your Snake's appearance
+    // TIP: If you open your Snake URL in a browser you should see this data
     pub fn info(&self) -> Value {
         info!("INFO");
 
-        // The author of the Battlesnake - A.K.A. me!
+        // The author of the Snake - A.K.A. me!
         let author = self.config.battlesnake_username.as_str();
 
         // If the `debug_assertions` feature is enabled, the snake will be pink, showing that it is
@@ -59,13 +59,13 @@ impl Server {
             self.config.snake.color.as_str()
         };
 
-        // The head of the Battlesnake.
+        // The head of the Snake.
         let head = self.config.snake.head.as_str();
 
-        // The tail of the Battlesnake.
+        // The tail of the Snake.
         let tail = self.config.snake.tail.as_str();
 
-        // The version of the Battlesnake - A.K.A. the version of the crate.
+        // The version of the Snake - A.K.A. the version of the crate.
         let version = env!("CARGO_PKG_VERSION");
 
         json!({
@@ -78,18 +78,18 @@ impl Server {
         })
     }
 
-    // start is called when your Battlesnake begins a game
+    // start is called when your Snake begins a game
     pub fn start(&mut self, state: &GameState) {
         let id = &state.game.id;
 
         info!("Starting game '{id}'!");
 
-        let engine = Engine::new(state.clone());
+        let engine = Engine::new(self.config.engine, state.clone());
 
         self.games.insert(id.clone(), engine);
     }
 
-    // end is called when your Battlesnake finishes a game
+    // end is called when your Snake finishes a game
     pub fn end(&mut self, state: &GameState) {
         let id = &state.game.id;
 
@@ -110,7 +110,7 @@ impl Server {
         } else {
             warn!("No engine found for game '{id}'!");
             warn!("Creating new engine...");
-            let engine = Engine::new(state.clone());
+            let engine = Engine::new(self.config.engine, state.clone());
             self.games.insert(id.clone(), engine);
             self.games.get_mut(id).unwrap()
         };

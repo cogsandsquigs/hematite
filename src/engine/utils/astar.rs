@@ -1,48 +1,54 @@
-use super::heap_item::HeapItem;
+// This is really just some code to run the A* algorithm on the given board.
+
 use crate::{engine::Engine, game::point::Point};
 use std::{
     cmp::Reverse,
     collections::{BinaryHeap, HashMap},
 };
 
+/// Runs the A* algorithm on the given map, starting at the given position and
+/// ending at the given position.
 impl Engine {
-    /// Given a set of starting coordinates and an ending coordinate, it finds the shortest
-    /// path between the two coordinates, and returns the path as a vector of coordinates.
-    /// If there is no path, it returns None.
-    pub fn astar(&self, starts: Vec<Point>, end: Point) -> Option<Vec<Point>> {
-        // The set of points that need to be explored/re-expanded. Initially, it contains the
-        // starting points.
-        let mut open_set: BinaryHeap<Reverse<HeapItem<Point>>> = starts
-            .iter()
-            .map(|p| Reverse(HeapItem::new(*p, 0)))
-            .collect();
-
-        // 'came_from' is a map of points to the node that they can most efficiently be reached from.
+    /// Runs the A* algorithm on the given map, starting at the given positions and
+    /// ending at the given position. Returns a path starting from any of the starting
+    /// points to the end point, if one exists. Otherwise, returns None.
+    pub fn astar_find(&self, starts: &[Point], end: &Point) -> Option<Vec<Point>> {
+        // The queue of positions to check. Initialized with the starting positions.
+        let mut search_queue: BinaryHeap<Reverse<WeightedPoint>> = BinaryHeap::new();
+        // The score of every point we have encountered.
+        let mut scores: HashMap<Point, i32> = HashMap::new();
+        // The map from a point to the point it came from with the best path.
         let mut came_from: HashMap<Point, Point> = HashMap::new();
 
-        // A map of points to their current cost from the start node. This cost is the same as the
-        // cost used in Dijkstra's algorithm. It starts with the starting points having a cost of 0.
-        let mut g_score: HashMap<Point, i32> = starts.iter().map(|p| (*p, 0)).collect();
+        println!("a");
 
-        // A map of points to their `g_score` plus their heuristic cost. This is the cost that is
-        // the best-estimate following through the most efficient path. Note that in this case,
-        // it is the manhattan distance to the end. It contains the starting points having a cost
-        // of their heuristic cost.
-        let mut f_score: HashMap<Point, i32> = starts
+        // Initalize the search queue with the starting positions.
+        starts
             .iter()
-            .map(|p| (*p, p.distance(&end) as i32))
-            .collect();
+            .map(|&point| Reverse(WeightedPoint::new(point, 0)))
+            .for_each(|point| search_queue.push(point));
 
-        while let Some(Reverse(HeapItem { value: point, .. })) = open_set.pop() {
-            // If we have reached the end, then we have found the shortest path.
-            if point == end {
-                // We have found the shortest path, so we can reconstruct the path and return it.
-                let mut path = vec![end];
-                let mut current = end;
+        // Initialize the scores of the starting positions to their distance from the end.
+        starts
+            .iter()
+            .map(|&point| (point, point.distance(end) as i32))
+            .for_each(|(point, score)| {
+                scores.insert(point, score);
+            });
 
+        while let Some(Reverse(WeightedPoint {
+            point,
+            weight: point_score,
+        })) = search_queue.pop()
+        {
+            println!("b");
+            // If we have found the end, return the path.
+            if &point == end {
+                let mut path = vec![*end];
+                let mut current = *end;
+
+                // Iterate through the came_from map to get the path.
                 while let Some(next) = came_from.get(&current) {
-                    // Instead of `push`ing the element to the list, we insert it at index 0 so that we don't
-                    // have to reverse the list at the end.
                     path.insert(0, *next);
                     current = *next;
                 }
@@ -50,42 +56,69 @@ impl Engine {
                 return Some(path);
             }
 
-            self.board
-                .neighbors(&point)
-                .iter()
-                // If the neighbor is unsafe, then we skip it. Originally, the cost function
-                // labled unsafe nodes as having a cost of `i32::MAX`, but this caused a bug
-                // where if the heuristic cost was more than 0, then the cost would roll over
-                // and become negative, which would cause the node to be added to the open set.
-                .filter(|neighbor| !self.is_unsafe(neighbor))
-                // Now, the main A* algorithm.
-                .for_each(|neighbor| {
-                    // The g_score that we are currently considering is the g_score of the current
-                    // point plus the cost of moving to the neighbor.
-                    let tentative_g_score = g_score[&point] + self.cost(neighbor);
+            // Iterate through all the neighbors of the current point.
+            for neighbor in self.safe_neighbors() {
+                println!("c");
+                // The tentative score is the current score of `point`, plus the point's own score, *plus*
+                // the distance from the neighbor to the end.
+                let tentative_score =
+                    point_score + self.score(&neighbor) + point.distance(&neighbor) as i32;
 
-                    // If the node does exist, and the tentative g_score is better than the current
-                    // g_score, then we update the came_from and g_score maps. If it doesn't exist,
-                    // we do the same thing, and add it to the open set.
-                    if tentative_g_score < *g_score.get(neighbor).unwrap_or(&i32::MAX) {
-                        // This is the best path we have found so far, so we update the came_from
-                        // and g_score maps.
-                        came_from.insert(*neighbor, point);
-                        g_score.insert(*neighbor, tentative_g_score);
-                        f_score.insert(
-                            *neighbor,
-                            tentative_g_score + neighbor.distance(&end) as i32,
-                        );
+                // If the neighbor has not been encountered yet, or the tentative score is better than the
+                // current score, update the score and the came_from map.
+                if !scores.contains_key(&neighbor) || tentative_score < scores[&neighbor] {
+                    // Update the score.
+                    scores.insert(neighbor, tentative_score);
 
-                        // If the neighbor is not in the open set, then we add it to the open set.
-                        if !open_set.iter().any(|item| item.0.value == *neighbor) {
-                            open_set.push(Reverse(HeapItem::new(*neighbor, f_score[neighbor])));
-                        }
-                    }
-                });
+                    // Insert into the search queue.
+                    search_queue.push(Reverse(WeightedPoint::new(neighbor, tentative_score)));
+
+                    // Insert into the came_from map, so that if we find the end, we can trace back the path.
+                    came_from.insert(neighbor, point);
+                }
+            }
         }
 
-        // We didn't find a path, so return `None`
+        // If we haven't found a path by now, return None.
         None
+    }
+
+    /// Scoring for a point for the A* algorithm.
+    fn score(&self, point: &Point) -> i32 {
+        // If the point is a food, give it a score of -1.
+        if self.board.food.contains(point) {
+            -3
+        } else {
+            1
+        }
+    }
+}
+
+// The type for the heap of positions to check.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct WeightedPoint {
+    /// The point to check.
+    pub point: Point,
+
+    /// The weight of the point.
+    pub weight: i32,
+}
+
+impl WeightedPoint {
+    /// Create a new weighted point.
+    fn new(point: Point, weight: i32) -> Self {
+        Self { point, weight }
+    }
+}
+
+impl PartialOrd for WeightedPoint {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.weight.cmp(&other.weight))
+    }
+}
+
+impl Ord for WeightedPoint {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other.weight.cmp(&self.weight)
     }
 }

@@ -57,7 +57,7 @@ fn rocket() -> _ {
 
     env_logger::init();
 
-    info!("Starting Battlesnake Server...");
+    info!("Starting Snake Server...");
 
     let server = Server::new();
 

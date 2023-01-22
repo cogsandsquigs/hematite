@@ -1,3 +1,7 @@
+pub mod engine;
+pub mod snake;
+
+use self::{engine::EngineConfig, snake::SnakeConfig};
 use cargo_toml::Manifest;
 use serde::{Deserialize, Serialize};
 
@@ -9,22 +13,10 @@ pub struct Config {
 
     /// The configuration for the battlesnake itself.
     pub snake: SnakeConfig,
-}
 
-/// The structure holding the configuration for the battlesnake itself.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct SnakeConfig {
-    /// The color of the snake.
-    pub color: String,
-
-    /// OPTIONAL: The debug/development color of the snake.
-    pub debug_color: Option<String>,
-
-    /// The head of the snake.
-    pub head: String,
-
-    /// The tail of the snake.
-    pub tail: String,
+    /// The configuration for the engine.
+    #[serde(default)]
+    pub engine: EngineConfig,
 }
 
 impl Config {
@@ -32,7 +24,7 @@ impl Config {
     /// `package.metadata` keys are missing from the configuration.
     pub fn load() -> Self {
         // The cargo.toml file is included as a byte array at compile time.
-        let cargo_file = include_bytes!("../Cargo.toml");
+        let cargo_file = include_bytes!("../../Cargo.toml");
 
         // This is the complete structure of the cargo.toml file.
         let manifest = toml::from_slice::<Manifest<Config>>(cargo_file).unwrap();
