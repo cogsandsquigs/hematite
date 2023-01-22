@@ -1,12 +1,11 @@
 [package]
-	authors = ["Ian Pratt <ianjdpratt@gmail.com>"]
-	edition = "2021"
-	name    = "hematite"
-	version = "0.2.1"
-
+	authors     = ["Ian Pratt <ianjdpratt@gmail.com>"]
 	description = "A Battlesnake written in Rust"
+	edition     = "2021"
 	keywords    = ["battlesnake"]
+	name        = "hematite"
 	readme      = "README.md"
+	version     = "0.2.1"
 
 	[package.metadata]
 		battlesnake_username = "cogsandsquigs" # My Battlesnake username
