@@ -31,4 +31,3 @@
 	# Miscellaneous
 	itertools = "0.10.5"                                                 # For iterating over collections
 	rand      = { version = "0.8.5", features = ["alloc", "small_rng"] }
-	rayon     = "1.6.1"                                                  # Parallelize some functions easily

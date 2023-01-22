@@ -23,6 +23,14 @@ impl Board {
     pub fn is_on_board(&self, point: &Point) -> bool {
         point.x >= 0 && point.x < self.width as i32 && point.y >= 0 && point.y < self.height as i32
     }
+
+    /// Gets all the other snakes on the board.
+    pub fn other_snakes(&self, you: &Battlesnake) -> Vec<&Battlesnake> {
+        self.snakes
+            .iter()
+            .filter(|snake| snake.id != you.id)
+            .collect()
+    }
 }
 
 /// A battlesnake.
