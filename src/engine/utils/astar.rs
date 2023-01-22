@@ -50,35 +50,39 @@ impl Engine {
                 return Some(path);
             }
 
-            for neighbor in self.board.neighbors(&point) {
+            self.board
+                .neighbors(&point)
+                .iter()
                 // If the neighbor is unsafe, then we skip it. Originally, the cost function
                 // labled unsafe nodes as having a cost of `i32::MAX`, but this caused a bug
                 // where if the heuristic cost was more than 0, then the cost would roll over
                 // and become negative, which would cause the node to be added to the open set.
-                if self.is_unsafe(&point) {
-                    continue;
-                }
+                .filter(|neighbor| !self.is_unsafe(neighbor))
+                // Now, the main A* algorithm.
+                .for_each(|neighbor| {
+                    // The g_score that we are currently considering is the g_score of the current
+                    // point plus the cost of moving to the neighbor.
+                    let tentative_g_score = g_score[&point] + self.cost(neighbor);
 
-                // The g_score that we are currently considering is the g_score of the current
-                // point plus the cost of moving to the neighbor.
-                let tentative_g_score = g_score[&point] + self.cost(&neighbor);
+                    // If the node does exist, and the tentative g_score is better than the current
+                    // g_score, then we update the came_from and g_score maps. If it doesn't exist,
+                    // we do the same thing, and add it to the open set.
+                    if tentative_g_score < *g_score.get(neighbor).unwrap_or(&i32::MAX) {
+                        // This is the best path we have found so far, so we update the came_from
+                        // and g_score maps.
+                        came_from.insert(*neighbor, point);
+                        g_score.insert(*neighbor, tentative_g_score);
+                        f_score.insert(
+                            *neighbor,
+                            tentative_g_score + neighbor.distance(&end) as i32,
+                        );
 
-                // If the node does exist, and the tentative g_score is better than the current
-                // g_score, then we update the came_from and g_score maps. If it doesn't exist,
-                // we do the same thing, and add it to the open set.
-                if tentative_g_score < *g_score.get(&neighbor).unwrap_or(&i32::MAX) {
-                    // This is the best path we have found so far, so we update the came_from
-                    // and g_score maps.
-                    came_from.insert(neighbor, point);
-                    g_score.insert(neighbor, tentative_g_score);
-                    f_score.insert(neighbor, tentative_g_score + neighbor.distance(&end) as i32);
-
-                    // If the neighbor is not in the open set, then we add it to the open set.
-                    if !open_set.iter().any(|item| item.0.value == neighbor) {
-                        open_set.push(Reverse(HeapItem::new(neighbor, f_score[&neighbor])));
+                        // If the neighbor is not in the open set, then we add it to the open set.
+                        if !open_set.iter().any(|item| item.0.value == *neighbor) {
+                            open_set.push(Reverse(HeapItem::new(*neighbor, f_score[neighbor])));
+                        }
                     }
-                }
-            }
+                });
         }
 
         // We didn't find a path, so return `None`

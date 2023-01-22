@@ -17,12 +17,18 @@
 			tail        = "sharp"     # The tail of Hematite
 
 [dependencies]
-	cargo_toml = "0.14.0"
-	env_logger = "0.9.0"
-	itertools  = "0.10.5"
-	log        = "0.4.0"
-	rand       = { version = "0.8.5", features = ["alloc", "small_rng"] }
-	rocket     = { version = "0.5.0-rc.1", features = ["json"] }
+	# Server and logging
+	env_logger = "0.9.0"                                         # For logging
+	log        = "0.4.0"                                         # For logging
+	rocket     = { version = "0.5.0-rc.1", features = ["json"] } # For the web server
+
+	# Serialization and deserialization of json and toml
+	cargo_toml = "0.14.0"                                       # For parsing the Cargo.toml file to read the configuration
 	serde      = { version = "1.0.117", features = ["derive"] }
-	serde_json = "1.0.59"
-	toml       = "0.5.11"
+	serde_json = "1.0.59"                                       # Parsing JSON
+	toml       = "0.5.11"                                       # Parsing TOML
+
+	# Miscellaneous
+	itertools = "0.10.5"                                                 # For iterating over collections
+	rand      = { version = "0.8.5", features = ["alloc", "small_rng"] }
+	rayon     = "1.6.1"                                                  # Parallelize some functions easily
