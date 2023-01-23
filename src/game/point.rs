@@ -8,6 +8,11 @@ pub struct Point {
 }
 
 impl Point {
+    /// Creates a new point
+    pub fn new(x: i32, y: i32) -> Self {
+        Self { x, y }
+    }
+
     /// Gets all the orthogonal neighbors of the coordinate.
     pub fn neighbors(&self) -> Vec<Point> {
         vec![

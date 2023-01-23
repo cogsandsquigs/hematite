@@ -11,10 +11,10 @@
 		battlesnake_username = "cogsandsquigs" # My Snake username
 
 		[package.metadata.snake]
-			color       = "#0e0d0b"     # The color of Hematite's body
-			debug_color = "#ff00ff"     # The color when Hematite is being debugged/in development mode
-			head        = "all-seeing"  # The head of Hematite
-			tail        = "mystic-moon" # The tail of Hematite
+			color       = "#0e0d0b"    # The color of Hematite's body
+			debug_color = "#ff00ff"    # The color when Hematite is being debugged/in development mode
+			head        = "all-seeing" # The head of Hematite
+			tail        = "sharp"      # The tail of Hematite
 
 		[package.metadata.engine]
 			hungry_moves = 50 # Stay hungry for the first 50 moves

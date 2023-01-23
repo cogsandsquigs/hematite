@@ -50,6 +50,9 @@ impl Engine {
         // Update the mode of the engine.
         self.update_mode();
 
-        self.hungry_move()
+        match self.hungry_move() {
+            Some(m) => m,
+            None => self.random_move(),
+        }
     }
 }

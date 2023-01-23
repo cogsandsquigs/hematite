@@ -7,9 +7,8 @@ use crate::game::point::Point;
 /// Engine API for move safety
 impl Engine {
     /// Returns an iterator of all the safe neighbors of the snake's head.
-    pub fn safe_neighbors(&self) -> impl Iterator<Item = Point> + '_ {
-        self.you
-            .head
+    pub fn safe_neighbors(&self, point: &Point) -> impl Iterator<Item = Point> + '_ {
+        point
             .neighbors()
             .into_iter()
             .filter(move |&n| self.is_safe(&n))
@@ -42,7 +41,7 @@ impl Engine {
                     && head
                         .neighbors()
                         .iter()
-                        .any(|neighbor| self.board.food.contains(neighbor))
+                        .all(|neighbor| !self.board.food.contains(neighbor))
             {
                 return true;
             }
