@@ -43,14 +43,21 @@ impl Engine {
     pub fn update(&mut self, state: GameState) {
         self.board = state.board;
         self.you = state.you;
-    }
 
-    /// Get the next move for the snake.
-    pub fn get_move(&mut self) -> Move {
         // Update the mode of the engine.
         self.update_mode();
+    }
 
-        match self.hungry_move() {
+    /// Get the next move for the snake. Should always be called before `update`, to
+    /// update both the game state as well as the mode the engine is in.
+    pub fn get_move(&mut self) -> Move {
+        // Get the move the engine makes based on the mode it's in.
+        let move_ = match self.mode {
+            Mode::Hungry => self.hungry_move(),
+            Mode::Searching => self.searching_move(),
+        };
+
+        match move_ {
             Some(m) => m,
             None => self.random_move(),
         }
