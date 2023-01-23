@@ -1,4 +1,5 @@
 pub mod hungry;
+pub mod searching;
 
 use super::Engine;
 
