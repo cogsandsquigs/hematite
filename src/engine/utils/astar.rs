@@ -80,6 +80,7 @@ impl Engine {
         // however, there was a bug with that. If two food items appeared next to each other, the A* algorithm
         // would get stuck in an infinite loop, because it would keep switching between the two food items (and
         // giving them more and more negative scores). Thus, the score must be 0.
+        // TODO: Fix the bug with the A* algorithm, maybe? Or we could keep it like this, no harm no foul.
         if self.board.food.contains(point) {
             0
         }
