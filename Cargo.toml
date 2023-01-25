@@ -18,6 +18,7 @@
 
 		[package.metadata.engine]
 			hungry_moves = 50 # Stay hungry for the first 50 moves
+
 [dependencies]
 	# Server and logging
 	env_logger = "0.9.0"                                         # For logging

@@ -43,6 +43,7 @@ impl Engine {
     pub fn update(&mut self, state: GameState) {
         self.board = state.board;
         self.you = state.you;
+        self.turn = state.turn;
 
         // Update the mode of the engine.
         self.update_mode();
@@ -54,7 +55,7 @@ impl Engine {
         // Get the move the engine makes based on the mode it's in.
         let move_ = match self.mode {
             Mode::Hungry => self.hungry_move(),
-            Mode::Searching => self.searching_move(),
+            Mode::Scared => self.scared_move(),
         };
 
         match move_ {
