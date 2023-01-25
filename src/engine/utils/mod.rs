@@ -7,6 +7,18 @@ use rand::seq::IteratorRandom;
 
 /// Miscellaneous utility functions for the engine.
 impl Engine {
+    /// Returns an iterator of all safe moves.
+    pub fn safe_moves(&self) -> impl Iterator<Item = Move> + '_ {
+        let head = &self.you.head;
+
+        Move::all()
+            .iter()
+            .copied()
+            .filter(move |&move_| self.is_safe(&move_.to_coord(head)))
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+
     /// Returns a random move. It will try to make the move safe, but if there is no safe move available,
     /// it will return a random move regardless of safety. This function automatically logs the fact that
     /// it is choosing a random move, so you don't need to do so yourself.

@@ -2,20 +2,21 @@ use crate::{engine::Engine, game::moves::Move};
 
 /// Engine API for scared moves.
 impl Engine {
-    /// Returns the move the snake should make when it's scared.
+    /// Returns the move the snake should make when it's scared. In this case, it's the move that
+    /// gets it closest to its body.
     pub fn scared_move(&self) -> Option<Move> {
-        let other_snakes = self.board.other_snakes(&self.you);
+        let closest_move = self.safe_moves().min_by_key(|&move_| {
+            let move_coord = move_.to_coord(&self.you.head);
 
-        let closest_snake = other_snakes
-            .iter()
-            .min_by_key(|snake| snake.head.distance(&self.you.head))?;
+            self.you
+                .body
+                .iter()
+                .map(|c| c.distance(&move_coord))
+                .min()
+                .unwrap_or(u32::MAX)
+        });
 
-        // Move away from the closest snake.
-        Move::all()
-            .iter()
-            .filter(|move_| self.is_safe(&move_.to_coord(&self.you.head)))
-            .min_by_key(|move_| move_.to_coord(&self.you.head).distance(&closest_snake.head))
-            .copied()
+        closest_move
     }
 
     /// Returns true if the snake is scared.
