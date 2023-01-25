@@ -5,7 +5,7 @@
 	keywords    = ["battlesnake"]
 	name        = "hematite"
 	readme      = "README.md"
-	version     = "0.2.1"
+	version     = "0.3.0"
 
 	[package.metadata]
 		battlesnake_username = "cogsandsquigs" # My Snake username
