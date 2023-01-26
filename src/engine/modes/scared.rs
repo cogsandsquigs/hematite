@@ -24,7 +24,6 @@ impl Engine {
         let other_snakes = self.board.other_snakes(&self.you);
 
         let closest_snake = other_snakes
-            .iter()
             .map(|snake| (snake, snake.head.distance(&self.you.head)))
             .min_by_key(|(_, distance)| *distance);
 

@@ -1,3 +1,4 @@
+pub mod aggressive;
 pub mod hungry;
 pub mod scared;
 
@@ -12,6 +13,9 @@ pub enum Mode {
 
     /// The snake is scared and wants to avoid danger.
     Scared,
+
+    /// The snake is agressive and attacks smaller snakes.
+    Aggressive,
 }
 
 /// Engine API for modes.
@@ -23,7 +27,7 @@ impl Engine {
         } else if self.is_scared() {
             Mode::Scared
         } else {
-            panic!("Engine is in an invalid mode.")
+            Mode::Aggressive
         };
 
         debug!("Engine mode: {:?}", self.mode);

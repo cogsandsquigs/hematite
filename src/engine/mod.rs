@@ -56,6 +56,7 @@ impl Engine {
         let move_ = match self.mode {
             Mode::Hungry => self.hungry_move(),
             Mode::Scared => self.scared_move(),
+            Mode::Aggressive => self.aggressive_move(),
         };
 
         match move_ {

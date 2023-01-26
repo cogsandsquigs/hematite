@@ -2,20 +2,22 @@
 // is hungry, it will move towards the nearest food, even if it means moving into a wall.
 
 use crate::{engine::Engine, game::moves::Move};
+use itertools::Itertools;
 
 /// Engine API for hungry moves.
 impl Engine {
     /// Returns the move the snake should make when it's hungry.
     pub fn hungry_move(&self) -> Option<Move> {
-        // Get the nearest food.
-        let nearest_food = self
+        // Get the nearest foods.
+        let nearest_foods = self
             .board
             .food
             .iter()
-            .min_by_key(|f| f.distance(&self.you.head))?;
+            .copied()
+            .min_set_by_key(|f| f.distance(&self.you.head));
 
         // Pathfind to the nearest food. If there is no path to the nearest food, return None.
-        let path = self.astar_find(&self.you.head, nearest_food)?;
+        let path = self.astar_find(&self.you.head, &nearest_foods)?;
 
         // Return the next move in the path. `path[0]` is the head of the snake, and `path[1]` is the
         // next move.

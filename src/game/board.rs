@@ -24,11 +24,8 @@ impl Board {
         point.x >= 0 && point.x < self.width as i32 && point.y >= 0 && point.y < self.height as i32
     }
 
-    /// Gets all the other snakes on the board.
-    pub fn other_snakes(&self, you: &Snake) -> Vec<&Snake> {
-        self.snakes
-            .iter()
-            .filter(|snake| snake.id != you.id)
-            .collect()
+    /// Gets all the other snakes on the board. Returns an iterator.
+    pub fn other_snakes<'a>(&'a self, you: &'a Snake) -> impl Iterator<Item = &'a Snake> + 'a {
+        self.snakes.iter().filter(|snake| snake.id != you.id)
     }
 }

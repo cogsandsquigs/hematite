@@ -12,7 +12,7 @@ impl Engine {
     /// Runs the A* algorithm on the given map, starting at the given positions and
     /// ending at the given position. Returns a path starting from any of the starting
     /// points to the end point, if one exists. Otherwise, returns None.
-    pub fn astar_find(&self, start: &Point, end: &Point) -> Option<Vec<Point>> {
+    pub fn astar_find(&self, start: &Point, ends: &[Point]) -> Option<Vec<Point>> {
         // The queue of positions to check. Initialized with the starting positions.
         let mut search_queue: BinaryHeap<Reverse<WeightedPoint>> = BinaryHeap::new();
         // The best-case cost of moving to a point from the start.
@@ -30,13 +30,13 @@ impl Engine {
         }));
         // Initialize the scores of the starting positions to their distance from the end.
         g_score.insert(*start, 0);
-        f_score.insert(*start, start.distance(end));
+        f_score.insert(*start, start.closest_distance(ends));
 
         while let Some(Reverse(WeightedPoint { point, .. })) = search_queue.pop() {
             // If we have found the end, return the path.
-            if &point == end {
-                let mut path = vec![*end];
-                let mut current = *end;
+            if ends.contains(&point) {
+                let mut path = vec![point];
+                let mut current = point;
 
                 // Iterate through the came_from map to get the path.
                 while let Some(next) = came_from.get(&current) {
@@ -58,7 +58,10 @@ impl Engine {
                 if tentative_g_score < *g_score.get(&neighbor).unwrap_or(&u32::MAX) {
                     // Update the scores.
                     g_score.insert(neighbor, tentative_g_score);
-                    f_score.insert(neighbor, tentative_g_score + neighbor.distance(end));
+                    f_score.insert(
+                        neighbor,
+                        tentative_g_score + neighbor.closest_distance(ends),
+                    );
 
                     // Insert into the came_from map, so that if we find the end, we can trace back the path.
                     came_from.insert(neighbor, point);
@@ -87,14 +90,13 @@ impl Engine {
         else if self
             .board
             .other_snakes(&self.you)
-            .iter()
             .any(|snake| snake.head.neighbors().contains(point))
         {
             3
         }
         // If the point is a hazard, we *really* want to avoid it, because it will kill us faster.
         // TODO: Differentiate between lethal and non-lethal hazards depending on game type.
-        else if self.board.hazards.contains(point) {
+        else if self.is_hazard(point) {
             16
         }
         // Otherwise, the point is safe, however every move decreases our health by 1.

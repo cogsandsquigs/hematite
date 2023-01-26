@@ -11,7 +11,7 @@
 // For more info see docs.battlesnake.com
 
 use crate::{configuration::Config, engine::Engine, game::GameState};
-use log::{info, warn};
+use log::{debug, info, warn};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -102,6 +102,7 @@ impl Server {
     // Valid moves are "up", "down", "left", or "right"
     // See https://docs.battlesnake.com/api/example-move for available data
     pub fn get_move(&mut self, state: &GameState) -> Value {
+        debug!("Turn {}", state.turn);
         info!("Calculating move...");
 
         let id = &state.game.id;

@@ -14,7 +14,7 @@ impl Engine {
         Move::all()
             .iter()
             .copied()
-            .filter(move |&move_| self.is_safe(&move_.to_coord(head)))
+            .filter(move |&move_| !self.is_unsafe(&move_.to_coord(head)))
             .collect::<Vec<_>>()
             .into_iter()
     }
@@ -30,7 +30,7 @@ impl Engine {
             .head
             .neighbors()
             .iter()
-            .filter(|&n| self.is_safe(n))
+            .filter(|&n| !self.is_unsafe(n))
             .choose(&mut rand::thread_rng())
             .copied();
 
