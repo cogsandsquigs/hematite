@@ -28,13 +28,9 @@ impl Point {
         (self.x - other.x).unsigned_abs() + (self.y - other.y).unsigned_abs()
     }
 
-    /// Gets the closest distance of a point to a list of points. Panics if the list is empty.
-    pub fn closest_distance(&self, points: &[Point]) -> u32 {
-        points
-            .iter()
-            .map(|point| self.distance(point))
-            .min()
-            .expect("The list of points must not be empty.")
+    /// Gets the closest distance of a point to a list of points.
+    pub fn closest_distance(&self, points: &[Point]) -> Option<u32> {
+        points.iter().map(|point| self.distance(point)).min()
     }
 }
 

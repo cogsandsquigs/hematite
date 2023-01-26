@@ -15,9 +15,9 @@ impl Engine {
             .map(|snake| snake.head)
             .collect_vec();
 
-        // If there are no smaller snakes, we can't attack.
+        // If there are no smaller snakes, we can't attack. So, we act scared instead.
         if heads.is_empty() {
-            None
+            self.scared_move()
         } else {
             let path = self.astar_find(&self.you.head, &heads)?;
 

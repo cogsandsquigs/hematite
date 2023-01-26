@@ -1,3 +1,4 @@
+pub mod area;
 pub mod astar;
 
 use super::Engine;

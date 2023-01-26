@@ -11,8 +11,13 @@ use std::{
 impl Engine {
     /// Runs the A* algorithm on the given map, starting at the given positions and
     /// ending at the given position. Returns a path starting from any of the starting
-    /// points to the end point, if one exists. Otherwise, returns None.
+    /// points to the end point, if one exists. Otherwise, returns None. If `ends` is
+    /// empty, it panics.
     pub fn astar_find(&self, start: &Point, ends: &[Point]) -> Option<Vec<Point>> {
+        if ends.is_empty() {
+            panic!("'ends' should not be empty!");
+        }
+
         // The queue of positions to check. Initialized with the starting positions.
         let mut search_queue: BinaryHeap<Reverse<WeightedPoint>> = BinaryHeap::new();
         // The best-case cost of moving to a point from the start.
@@ -30,7 +35,12 @@ impl Engine {
         }));
         // Initialize the scores of the starting positions to their distance from the end.
         g_score.insert(*start, 0);
-        f_score.insert(*start, start.closest_distance(ends));
+        f_score.insert(
+            *start,
+            start
+                .closest_distance(ends)
+                .expect("'ends' should not be empty!"),
+        );
 
         while let Some(Reverse(WeightedPoint { point, .. })) = search_queue.pop() {
             // If we have found the end, return the path.
@@ -60,7 +70,10 @@ impl Engine {
                     g_score.insert(neighbor, tentative_g_score);
                     f_score.insert(
                         neighbor,
-                        tentative_g_score + neighbor.closest_distance(ends),
+                        tentative_g_score
+                            + neighbor
+                                .closest_distance(ends)
+                                .expect("'ends' should not be empty!"),
                     );
 
                     // Insert into the came_from map, so that if we find the end, we can trace back the path.
@@ -93,6 +106,10 @@ impl Engine {
             .any(|snake| snake.head.neighbors().contains(point))
         {
             3
+        }
+        // If the point is another snake's move, we want to never cross it.
+        else if self.is_dangerous_snake_move(point) {
+            999999999
         }
         // If the point is a hazard, we *really* want to avoid it, because it will kill us faster.
         // TODO: Differentiate between lethal and non-lethal hazards depending on game type.
