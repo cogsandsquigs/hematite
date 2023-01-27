@@ -1,10 +1,11 @@
 use super::point::Point;
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 /// A battlesnake.
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Snake {
-    pub id: String,
+    pub id: SnakeID,
     pub name: String,
     pub health: u32,
     pub body: Vec<Point>,
@@ -20,3 +21,9 @@ impl Snake {
         *self.body.last().expect("All snakes should have a tail.")
     }
 }
+
+/// An ID for a snake.
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[serde(transparent)]
+#[repr(transparent)]
+pub struct SnakeID(Uuid);

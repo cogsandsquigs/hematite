@@ -34,3 +34,4 @@
 	# Misc.
 	itertools = "0.10.5"
 	rand      = { version = "0.8.5", features = ["small_rng"] }
+	uuid      = { version = "1.2.2", features = ["serde"] }

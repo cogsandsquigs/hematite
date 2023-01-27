@@ -5,7 +5,7 @@ mod utils;
 use self::modes::Mode;
 use crate::{
     configuration::engine::EngineConfig,
-    game::{board::Board, moves::Move, snake::Snake, GameState},
+    game::{board::Board, moves::Move, snake::Snake, state::GameState},
 };
 
 /// The engine for Hematite.
