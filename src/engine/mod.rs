@@ -55,7 +55,7 @@ impl Engine {
         // Get the move the engine makes based on the mode it's in.
         let move_ = match self.mode {
             Mode::Hungry => self.hungry_move(),
-            Mode::Scared => self.scared_move(),
+            Mode::Defensive => self.defensive_move(),
             Mode::Aggressive => self.aggressive_move(),
         };
 

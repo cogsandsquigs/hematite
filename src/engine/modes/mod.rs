@@ -1,6 +1,6 @@
 pub mod aggressive;
+pub mod defensive;
 pub mod hungry;
-pub mod scared;
 
 use super::Engine;
 use log::debug;
@@ -11,8 +11,8 @@ pub enum Mode {
     /// The snake is hungry and wants to eat food.
     Hungry,
 
-    /// The snake is scared and wants to avoid danger.
-    Scared,
+    /// The snake is defensive and wants to avoid danger, but better its position.
+    Defensive,
 
     /// The snake is agressive and attacks smaller snakes.
     Aggressive,
@@ -24,10 +24,10 @@ impl Engine {
     pub fn update_mode(&mut self) {
         self.mode = if self.is_hungry() {
             Mode::Hungry
-        } else if self.is_scared() {
-            Mode::Scared
-        } else {
+        } else if self.is_aggressive() {
             Mode::Aggressive
+        } else {
+            Mode::Defensive
         };
 
         debug!("Engine mode: {:?}", self.mode);

@@ -10,18 +10,18 @@ impl Engine {
         point
             .neighbors()
             .into_iter()
-            .filter(move |&n| !self.is_unsafe(&n))
+            .filter(move |point| !self.is_unsafe(point))
     }
 
     /// Returns true if the given point is unsafe to move to. Otherwise, returns false.
     pub fn is_unsafe(&self, point: &Point) -> bool {
-        !self.board.is_on_board(point) || self.is_snake(point)
+        !self.board.is_on_board(point) || self.is_snake(point) || self.is_snake_move(point)
     }
 
     /// Returns true if a given point is in a snake's body. Otherwise, returns false. This skips over the snake's
     /// tail, because that is allowed to be moved into as the other snake will move out of it. However, if the snake
     /// is less than 3 tiles long, or is moving into a food, then the tail is not allowed to be moved into.
-    pub fn is_snake(&self, point: &Point) -> bool {
+    fn is_snake(&self, point: &Point) -> bool {
         for snake in &self.board.snakes {
             let length = snake.body.len();
             // The head of the snake.

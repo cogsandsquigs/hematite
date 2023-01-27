@@ -33,6 +33,7 @@ impl Engine {
             point: *start,
             weight: 0,
         }));
+
         // Initialize the scores of the starting positions to their distance from the end.
         g_score.insert(*start, 0);
         f_score.insert(
@@ -106,10 +107,6 @@ impl Engine {
             .any(|snake| snake.head.neighbors().contains(point))
         {
             3
-        }
-        // If the point is another snake's move, we want to never cross it.
-        else if self.is_dangerous_snake_move(point) {
-            999999999
         }
         // If the point is a hazard, we *really* want to avoid it, because it will kill us faster.
         // TODO: Differentiate between lethal and non-lethal hazards depending on game type.
