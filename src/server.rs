@@ -104,7 +104,6 @@ impl Server {
     // See https://docs.battlesnake.com/api/example-move for available data
     pub fn get_move(&mut self, state: &GameState) -> Value {
         debug!("Turn {}", state.turn);
-        println!("id: {}", state.you.id);
         info!("Calculating move...");
 
         let id = &state.game.id;
