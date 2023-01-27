@@ -14,6 +14,7 @@ use crate::{configuration::Config, engine::Engine, game::state::GameState};
 use log::{debug, info, warn};
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 /// The structure that handles all the `GET`/`POST` request logic for the game.
 #[derive(Clone)]
@@ -23,7 +24,7 @@ pub struct Server {
     config: Config,
 
     /// A map of game IDs to `Engine` instances, which handle the game logic.
-    games: HashMap<String, Engine>,
+    games: HashMap<Uuid, Engine>,
 }
 
 /// Public API for `Server`.
@@ -86,7 +87,7 @@ impl Server {
 
         let engine = Engine::new(self.config.engine, state.clone());
 
-        self.games.insert(id.clone(), engine);
+        self.games.insert(*id, engine);
     }
 
     // end is called when your Snake finishes a game
@@ -103,6 +104,7 @@ impl Server {
     // See https://docs.battlesnake.com/api/example-move for available data
     pub fn get_move(&mut self, state: &GameState) -> Value {
         debug!("Turn {}", state.turn);
+        println!("id: {}", state.you.id);
         info!("Calculating move...");
 
         let id = &state.game.id;
@@ -112,7 +114,7 @@ impl Server {
             warn!("No engine found for game '{id}'!");
             warn!("Creating new engine...");
             let engine = Engine::new(self.config.engine, state.clone());
-            self.games.insert(id.clone(), engine);
+            self.games.insert(*id, engine);
             self.games.get_mut(id).unwrap()
         };
 
