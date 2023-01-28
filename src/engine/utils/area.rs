@@ -8,11 +8,7 @@ impl Engine {
     /// Returns the area the engine controls as a u32.
     pub fn area_control(&self, head: &Point) -> u32 {
         // The other heads of the snakes
-        let other_heads = self
-            .board
-            .other_snakes(&self.you)
-            .map(|s| s.head)
-            .collect_vec();
+        let other_heads = self.other_snakes().map(|s| s.head).collect_vec();
 
         let mut area = 0;
         let mut queue = Vec::new();
@@ -35,7 +31,7 @@ impl Engine {
             }
 
             for neighbor in point.neighbors() {
-                if self.board.is_on_board(&neighbor) && !visited.contains(&neighbor) {
+                if self.is_on_board(&neighbor) && !visited.contains(&neighbor) {
                     queue.push(neighbor);
                 }
             }

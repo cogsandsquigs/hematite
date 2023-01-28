@@ -10,14 +10,13 @@ impl Engine {
     pub fn hungry_move(&self) -> Option<Move> {
         // Get the nearest foods.
         let nearest_foods = self
-            .board
-            .food
+            .food()
             .iter()
             .copied()
-            .min_set_by_key(|f| f.distance(&self.you.head));
+            .min_set_by_key(|f| f.distance(self.head()));
 
         // Pathfind to the nearest food. If there is no path to the nearest food, return None.
-        let path = self.astar_find(&self.you.head, &nearest_foods)?;
+        let path = self.astar_find(self.head(), &nearest_foods)?;
 
         // Return the next move in the path. `path[0]` is the head of the snake, and `path[1]` is the
         // next move.
@@ -27,6 +26,6 @@ impl Engine {
     /// Returns true if the snake is hungry. this is when the snake is below 50 health, or it's the
     /// first 50 turns of the game.
     pub fn is_hungry(&self) -> bool {
-        self.turn <= self.config.hungry_moves || self.you.health < 50
+        self.turn() <= self.config.hungry_moves || self.health() < 50
     }
 }

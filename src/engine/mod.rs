@@ -5,7 +5,7 @@ mod utils;
 use self::modes::Mode;
 use crate::{
     configuration::engine::EngineConfig,
-    game::{board::Board, moves::Move, snake::Snake, state::GameState},
+    game::{moves::Move, point::Point, snake::Snake, state::GameState},
 };
 
 /// The engine for Hematite.
@@ -14,37 +14,27 @@ pub struct Engine {
     /// The configuration for the engine.
     config: EngineConfig,
 
-    /// Turn counter
-    turn: u32,
+    /// The current state of the game.
+    state: GameState,
 
-    /// The board where the game is played.
-    board: Board,
-
-    /// The Snake that this engine is controlling.
-    you: Snake,
-
-    /// The mode the engine is in
+    /// The current mode of the engine.
     mode: Mode,
 }
 
+/// Public API for the engine.
 impl Engine {
     /// Create a new engine.
     pub fn new(config: EngineConfig, initial_state: GameState) -> Self {
         Self {
             config,
-            board: initial_state.board,
-            you: initial_state.you,
+            state: initial_state,
             mode: Mode::Hungry,
-            turn: 0,
         }
     }
 
     /// Update the engine with a new game state.
     pub fn update(&mut self, state: GameState) {
-        self.board = state.board;
-        self.you = state.you;
-        self.turn = state.turn;
-
+        self.state = state;
         // Update the mode of the engine.
         self.update_mode();
     }
@@ -63,5 +53,43 @@ impl Engine {
             Some(m) => m,
             None => self.random_move(),
         }
+    }
+}
+
+/// Private API for the engine.
+impl Engine {
+    /// Get the head of the snake.
+    fn head(&self) -> &Point {
+        &self.state.you.head
+    }
+
+    /// Get the length of the snake.
+    fn len(&self) -> u32 {
+        self.state.you.length
+    }
+
+    /// Get the health of the snake.
+    fn health(&self) -> u32 {
+        self.state.you.health
+    }
+
+    /// Get all the food on the board.
+    fn food(&self) -> &[Point] {
+        &self.state.board.food
+    }
+
+    /// Get all the hazards on the board.
+    fn hazards(&self) -> &[Point] {
+        &self.state.board.hazards
+    }
+
+    /// Get the turn number.
+    fn turn(&self) -> u32 {
+        self.state.turn
+    }
+
+    /// Get all the snakes on the board.
+    fn snakes(&self) -> &[Snake] {
+        &self.state.board.snakes
     }
 }

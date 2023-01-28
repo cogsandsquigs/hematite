@@ -9,9 +9,8 @@ impl Engine {
     pub fn aggressive_move(&self) -> Option<Move> {
         // Gets all the heads of snakes that are smaller than us.
         let heads = self
-            .board
-            .other_snakes(&self.you)
-            .filter(|snake| snake.length < self.you.length)
+            .other_snakes()
+            .filter(|snake| snake.length < self.len())
             .map(|snake| snake.head)
             .collect_vec();
 
@@ -20,7 +19,7 @@ impl Engine {
         if heads.is_empty() {
             None
         } else {
-            let path = self.astar_find(&self.you.head, &heads)?;
+            let path = self.astar_find(self.head(), &heads)?;
 
             Move::from_coords(&path[0], &path[1])
         }
@@ -30,9 +29,8 @@ impl Engine {
     pub fn is_aggressive(&self) -> bool {
         // The number of snakes smaller than us.
         let smaller_snakes = self
-            .board
-            .other_snakes(&self.you)
-            .filter(|snake| snake.length < self.you.length)
+            .other_snakes()
+            .filter(|snake| snake.length < self.len())
             .count();
 
         // If there are no smaller snakes, we can't attack. This only happens if all snakes died,

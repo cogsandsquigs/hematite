@@ -2,15 +2,25 @@ pub mod area;
 pub mod astar;
 
 use super::Engine;
-use crate::game::moves::Move;
+use crate::game::{moves::Move, point::Point};
 use log::{info, warn};
 use rand::seq::IteratorRandom;
 
 /// Miscellaneous utility functions for the engine.
 impl Engine {
+    /// Get all the other snakes in the game.
+    pub fn other_snakes(&self) -> impl Iterator<Item = &crate::game::snake::Snake> {
+        self.state.board.other_snakes(&self.state.you)
+    }
+
+    /// Checks if a point is on the board
+    pub fn is_on_board(&self, point: &Point) -> bool {
+        self.state.board.is_on_board(point)
+    }
+
     /// Returns an iterator of all safe moves.
     pub fn safe_moves(&self) -> impl Iterator<Item = Move> + '_ {
-        let head = &self.you.head;
+        let head = self.head();
 
         Move::all()
             .iter()
@@ -27,8 +37,7 @@ impl Engine {
         info!("Choosing a random safe move.");
 
         let safe_move = self
-            .you
-            .head
+            .head()
             .neighbors()
             .iter()
             .filter(|&n| !self.is_unsafe(n))
@@ -36,7 +45,7 @@ impl Engine {
             .copied();
 
         if let Some(safe_move) = safe_move {
-            Move::from_coords(&self.you.head, &safe_move)
+            Move::from_coords(self.head(), &safe_move)
                 .expect("A* paths should generate valid moves.")
         } else {
             warn!("There are no safe moves available. Returning a random move.");

@@ -97,13 +97,12 @@ impl Engine {
         // however, there was a bug with that. If two food items appeared next to each other, the A* algorithm
         // would get stuck in an infinite loop, because it would keep switching between the two food items (and
         // giving them more and more negative scores). Thus, the score must be 0.
-        if self.board.food.contains(point) {
+        if self.food().contains(point) {
             0
         }
         // If the point is a neighbor of a snake's head, we want to avoid it.
         else if self
-            .board
-            .other_snakes(&self.you)
+            .other_snakes()
             .any(|snake| snake.head.neighbors().contains(point))
         {
             3
