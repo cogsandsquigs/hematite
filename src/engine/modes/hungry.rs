@@ -11,7 +11,6 @@ impl Engine {
         // Get the nearest foods.
         let nearest_foods = self
             .food()
-            .iter()
             .copied()
             .min_set_by_key(|f| f.distance(self.head()));
 
@@ -20,7 +19,7 @@ impl Engine {
 
         // Return the next move in the path. `path[0]` is the head of the snake, and `path[1]` is the
         // next move.
-        Some(Move::from_coords(&path[0], &path[1]).expect("A* paths should generate valid moves."))
+        Some(Move::from_points(&path[0], &path[1]).expect("A* paths should generate valid moves."))
     }
 
     /// Returns true if the snake is hungry. this is when the snake is below 50 health, or it's the

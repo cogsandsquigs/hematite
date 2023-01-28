@@ -25,7 +25,7 @@ impl Move {
     }
 
     /// Turns two coordinates into a move, based on the difference between them.
-    pub fn from_coords(start: &Point, end: &Point) -> Option<Self> {
+    pub fn from_points(start: &Point, end: &Point) -> Option<Self> {
         let (x_diff, y_diff) = (end.x - start.x, end.y - start.y);
 
         match (x_diff, y_diff) {
@@ -38,7 +38,7 @@ impl Move {
     }
 
     /// Turns the move into an ending coordinate point given a starting coordinate.
-    pub fn to_coord(&self, start: &Point) -> Point {
+    pub fn to_point(&self, start: &Point) -> Point {
         match self {
             Move::Up => (start.x, start.y + 1).into(),
             Move::Down => (start.x, start.y - 1).into(),

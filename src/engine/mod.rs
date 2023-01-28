@@ -74,9 +74,14 @@ impl Engine {
         self.state.you.health
     }
 
-    /// Get all the food on the board.
-    fn food(&self) -> &[Point] {
-        &self.state.board.food
+    /// Get the turn number.
+    fn turn(&self) -> u32 {
+        self.state.turn
+    }
+
+    /// Get all the food on the board. Returns an iterator over the food.
+    fn food(&self) -> impl Iterator<Item = &Point> + '_ {
+        self.state.board.food.iter()
     }
 
     /// Get all the hazards on the board.
@@ -84,13 +89,8 @@ impl Engine {
         &self.state.board.hazards
     }
 
-    /// Get the turn number.
-    fn turn(&self) -> u32 {
-        self.state.turn
-    }
-
-    /// Get all the snakes on the board.
-    fn snakes(&self) -> &[Snake] {
-        &self.state.board.snakes
+    /// Get all the snakes on the board. Returns an iterator over the snakes.
+    fn snakes(&self) -> impl Iterator<Item = &Snake> + '_ {
+        self.state.board.snakes.values()
     }
 }

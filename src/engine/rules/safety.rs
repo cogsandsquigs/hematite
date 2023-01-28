@@ -2,6 +2,7 @@
 // on the board is safe to move to, assuming the snake's head is in a neighboring position.
 
 use crate::{engine::Engine, objects::point::Point};
+use itertools::Itertools;
 
 /// Engine API for move safety
 impl Engine {

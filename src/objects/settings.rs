@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 /// The rules associated with the current game.
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -15,7 +15,8 @@ pub struct Ruleset {
 #[serde(rename_all = "camelCase")]
 pub struct RulesetSettings {
     /// The percent chance food has to spawn every round
-    pub food_spawn_chance: u32,
+    #[serde(deserialize_with = "RulesetSettings::parse_food_spawn_chance")]
+    pub food_spawn_chance: f64,
 
     /// The minimum food to keep on the board at all times
     pub minimum_food: u32,
@@ -30,10 +31,28 @@ pub struct RulesetSettings {
     pub squad: RulesetSquadSettings,
 }
 
+impl RulesetSettings {
+    /// Parse the food spawn chance as a float.
+    fn parse_food_spawn_chance<'de, D>(deserializer: D) -> Result<f64, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(f64::deserialize(deserializer)? / 100.0)
+    }
+}
+
 /// The settings for royale games.
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RulesetRoyaleSettings {
+    /// The number of turns to wait before shrinking the map.
+    pub shrink_every_n_turns: u32,
+}
+
+/// The settings for squad games.
+#[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RulesetSquadSettings {
     /// If we allow snakes on the same squad to collide.
     pub allow_body_collisions: bool,
 
@@ -45,17 +64,6 @@ pub struct RulesetRoyaleSettings {
 
     /// Do squad members share length?
     pub shared_length: bool,
-}
-
-/// The settings for squad games.
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RulesetSquadSettings {
-    /// The number of snakes per squad
-    pub squad_size: u32,
-
-    /// The number of squads
-    pub squad_count: u32,
 }
 
 /// The name of the game type.

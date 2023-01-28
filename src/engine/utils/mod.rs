@@ -25,7 +25,7 @@ impl Engine {
         Move::all()
             .iter()
             .copied()
-            .filter(move |&move_| !self.is_unsafe(&move_.to_coord(head)))
+            .filter(move |&move_| !self.is_unsafe(&move_.to_point(head)))
             .collect::<Vec<_>>()
             .into_iter()
     }
@@ -45,7 +45,7 @@ impl Engine {
             .copied();
 
         if let Some(safe_move) = safe_move {
-            Move::from_coords(self.head(), &safe_move)
+            Move::from_points(self.head(), &safe_move)
                 .expect("A* paths should generate valid moves.")
         } else {
             warn!("There are no safe moves available. Returning a random move.");

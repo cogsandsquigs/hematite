@@ -1,6 +1,7 @@
 // This is really just some code to run the A* algorithm on the given board.
 
 use crate::{engine::Engine, objects::point::Point};
+use itertools::Itertools;
 use std::{
     cmp::Reverse,
     collections::{BinaryHeap, HashMap},

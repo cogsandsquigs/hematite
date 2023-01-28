@@ -21,7 +21,7 @@ impl Engine {
         } else {
             let path = self.astar_find(self.head(), &heads)?;
 
-            Move::from_coords(&path[0], &path[1])
+            Move::from_points(&path[0], &path[1])
         }
     }
 
