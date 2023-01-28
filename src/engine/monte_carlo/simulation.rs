@@ -4,6 +4,7 @@ use rand::{Rng, SeedableRng};
 use std::collections::{HashMap, HashSet};
 
 /// A simulation of a game of Battlesnake.
+#[derive(Debug, Clone)]
 pub struct Simulation {
     /// The random number generator.
     rng: rand::rngs::SmallRng,
@@ -30,10 +31,57 @@ impl Simulation {
             did_die: false,
         }
     }
+
+    /// Run a step of the simulation of the game.
+    pub fn step(&mut self, moves: &HashMap<SnakeID, Move>) {
+        // If the game is not over, simulate a turn.
+        if !self.is_game_over() {
+            self.apply_moves(moves);
+            self.put_food();
+        }
+    }
+
+    /// Run a random step of the simulation of the game.
+    pub fn random_step(&mut self) {
+        let moves = self.random_moves();
+        self.step(&moves);
+    }
 }
 
 /// Private API for the simulation - helper functions.
 impl Simulation {
+    /// Checks if the game is over.
+    fn is_game_over(&self) -> bool {
+        // If we died, the game is over.
+        if self.did_die {
+            return true;
+        }
+
+        // If there is only 1 (or 0) snakes left, the game is over.
+        if self.state.board.snakes.len() < 2 {
+            return true;
+        }
+
+        false
+    }
+
+    /// A random point on the board.
+    fn random_point(&mut self) -> Point {
+        let x = self.rng.gen_range(0..self.state.board.width as i32);
+        let y = self.rng.gen_range(0..self.state.board.height as i32);
+        (x, y).into()
+    }
+
+    /// A random set of moves for all snakes.
+    fn random_moves(&mut self) -> HashMap<SnakeID, Move> {
+        self.state
+            .board
+            .snakes
+            .keys()
+            .map(|id| (*id, Move::random(&mut self.rng)))
+            .collect()
+    }
+
     /// Put food on the board randomly, according to game rules.
     fn put_food(&mut self) {
         if self.state.board.food.len() as u32 >= self.state.board.width * self.state.board.height {
@@ -51,16 +99,9 @@ impl Simulation {
         }
     }
 
-    /// A random point on the board.
-    fn random_point(&mut self) -> Point {
-        let x = self.rng.gen_range(0..self.state.board.width as i32);
-        let y = self.rng.gen_range(0..self.state.board.height as i32);
-        (x, y).into()
-    }
-
     /// Simulate the application of moves. Panics if the map from snake ID to move does
     /// not contain a move for all snakes in the game.
-    fn apply_moves(&mut self, moves: HashMap<SnakeID, Move>) {
+    fn apply_moves(&mut self, moves: &HashMap<SnakeID, Move>) {
         // All the snakes on the board.
         // TODO: maybe make this more efficient?
         let snakes = self.state.board.snakes.clone();
@@ -74,7 +115,7 @@ impl Simulation {
         for id in snakes.keys() {
             let move_ = moves
                 .get(id)
-                .unwrap_or_else(|| panic!("Missing move for snake '{}'", id));
+                .unwrap_or_else(|| panic!("Could not find move for snake '{}'", id));
 
             self.apply_move(id, move_);
 
@@ -118,10 +159,29 @@ impl Simulation {
             snake.body.pop();
         }
 
-        // If the snake did not eat food during this turn, remove the id from the set.
+        // If the snake did not eat food during this turn, remove the id from the set and decrement
+        // the health.
         if !self.state.board.food.contains(&snake.head) {
+            // Remove it here so that we don't remove it twice.
             self.did_eat_food.remove(&snake.id);
             self.state.board.food.remove(&snake.head);
+
+            snake.health -= if self.state.board.hazards.contains(&snake.head) {
+                self.state.game.ruleset.settings.hazard_damage_per_turn
+            } else {
+                1
+            };
+        }
+        // If the snake did eat food, add the id to the set and reset health.
+        else {
+            self.did_eat_food.insert(snake.id);
+            snake.health = 100;
+            snake.length += 1;
+        }
+
+        // Apply the snake's moves to us IF we are the snake.
+        if id == &self.state.you.id {
+            self.state.you = snake.clone();
         }
     }
 
