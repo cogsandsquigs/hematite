@@ -11,7 +11,7 @@ pub struct Ruleset {
 }
 
 /// The settings for the current game.
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct RulesetSettings {
     /// The percent chance food has to spawn every round
@@ -42,7 +42,7 @@ impl RulesetSettings {
 }
 
 /// The settings for royale games.
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct RulesetRoyaleSettings {
     /// The number of turns to wait before shrinking the map.
@@ -50,7 +50,7 @@ pub struct RulesetRoyaleSettings {
 }
 
 /// The settings for squad games.
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct RulesetSquadSettings {
     /// If we allow snakes on the same squad to collide.

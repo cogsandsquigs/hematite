@@ -85,8 +85,8 @@ impl Engine {
     }
 
     /// Get all the hazards on the board.
-    fn hazards(&self) -> &[Point] {
-        &self.state.board.hazards
+    fn hazards(&self) -> impl Iterator<Item = &Point> + '_ {
+        self.state.board.hazards.iter()
     }
 
     /// Get all the snakes on the board. Returns an iterator over the snakes.

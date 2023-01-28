@@ -2,6 +2,7 @@
 // are still dangerous to move into.
 
 use crate::{engine::Engine, objects::point::Point};
+use itertools::Itertools;
 
 /// Public Engine API for hazards.
 impl Engine {

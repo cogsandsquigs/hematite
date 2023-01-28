@@ -23,7 +23,7 @@ pub struct Board {
     pub food: HashSet<Point>,
 
     /// The set of all hazards on the board.
-    pub hazards: Vec<Point>,
+    pub hazards: HashSet<Point>,
 }
 
 /// Public API for the board.
