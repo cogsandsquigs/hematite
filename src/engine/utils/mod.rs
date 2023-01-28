@@ -2,14 +2,14 @@ pub mod area;
 pub mod astar;
 
 use super::Engine;
-use crate::game::{moves::Move, point::Point};
+use crate::objects::{moves::Move, point::Point};
 use log::{info, warn};
 use rand::seq::IteratorRandom;
 
 /// Miscellaneous utility functions for the engine.
 impl Engine {
     /// Get all the other snakes in the game.
-    pub fn other_snakes(&self) -> impl Iterator<Item = &crate::game::snake::Snake> {
+    pub fn other_snakes(&self) -> impl Iterator<Item = &crate::objects::snake::Snake> {
         self.state.board.other_snakes(&self.state.you)
     }
 

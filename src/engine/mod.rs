@@ -1,11 +1,12 @@
 mod modes;
+mod monte_carlo;
 mod rules;
 mod utils;
 
 use self::modes::Mode;
 use crate::{
     configuration::engine::EngineConfig,
-    game::{moves::Move, point::Point, snake::Snake, state::GameState},
+    objects::{moves::Move, point::Point, snake::Snake, state::GameState},
 };
 
 /// The engine for Hematite.

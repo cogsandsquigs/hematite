@@ -1,7 +1,7 @@
 // Controlls when the snake decides that it's hungry, and *needs* to eat. Specifically, when the snake
 // is hungry, it will move towards the nearest food, even if it means moving into a wall.
 
-use crate::{engine::Engine, game::moves::Move};
+use crate::{engine::Engine, objects::moves::Move};
 use itertools::Itertools;
 
 /// Engine API for hungry moves.

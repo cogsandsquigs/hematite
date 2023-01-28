@@ -1,6 +1,6 @@
 use itertools::Itertools;
 
-use crate::{engine::Engine, game::moves::Move};
+use crate::{engine::Engine, objects::moves::Move};
 
 /// Engine API for aggressive moves.
 impl Engine {

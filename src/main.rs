@@ -1,9 +1,9 @@
 pub mod configuration;
 pub mod engine;
-pub mod game;
+pub mod objects;
 pub mod server;
 
-use crate::{game::state::GameState, server::Server};
+use crate::{objects::state::GameState, server::Server};
 use log::info;
 use rocket::fairing::AdHoc;
 use rocket::http::Status;

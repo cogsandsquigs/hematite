@@ -1,7 +1,7 @@
 // This contains the main rules logic for the game. Specifically, we have a function that returns if any given point
 // on the board is safe to move to, assuming the snake's head is in a neighboring position.
 
-use crate::{engine::Engine, game::point::Point};
+use crate::{engine::Engine, objects::point::Point};
 
 /// Engine API for move safety
 impl Engine {

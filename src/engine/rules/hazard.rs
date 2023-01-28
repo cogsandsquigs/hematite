@@ -1,7 +1,7 @@
 // This controls how we percieve hazards. These are obstacles/dangers that are not immediately threataning/lethal, but
 // are still dangerous to move into.
 
-use crate::{engine::Engine, game::point::Point};
+use crate::{engine::Engine, objects::point::Point};
 
 /// Public Engine API for hazards.
 impl Engine {

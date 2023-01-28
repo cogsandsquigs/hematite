@@ -1,4 +1,4 @@
-use crate::{engine::Engine, game::moves::Move};
+use crate::{engine::Engine, objects::moves::Move};
 
 /// Engine API for defensive moves.
 impl Engine {

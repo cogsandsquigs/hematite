@@ -3,17 +3,33 @@ use std::fmt::Display;
 use super::point::Point;
 use serde::{ser::SerializeSeq, Deserialize, Deserializer, Serialize};
 
-/// A battlesnake.
+/// A battlesnake. I tried to make this as efficient to copy/manipulate as possible, but
+/// there are still some problems.
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Snake {
+    /// The snake's ID.
     pub id: SnakeID,
-    pub name: String,
+
+    /// How much health the snake has. When health reaches 0, the snake dies.
     pub health: u32,
+
+    /// The snake's body. The first element is the head, the last element is the tail.
     pub body: Vec<Point>,
+
+    /// The snake's head.
     pub head: Point,
+
+    /// The length of the snake.
     pub length: u32,
-    pub latency: String,
-    pub shout: Option<String>,
+    // These are fields that are not used in the game, but are included in the API response.
+    // /// The snake's name.
+    // pub name: String,
+    //
+    // /// The snake's latency.
+    // pub latency: String,
+    //
+    // /// The snake's shout - what is this?
+    // pub shout: Option<String>,
 }
 
 impl Snake {

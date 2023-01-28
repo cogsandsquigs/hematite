@@ -1,6 +1,6 @@
 // This module deals with area-control-like algorithms and other things that have to do with areas
 
-use crate::{engine::Engine, game::point::Point};
+use crate::{engine::Engine, objects::point::Point};
 use itertools::Itertools;
 use std::collections::HashSet;
 
