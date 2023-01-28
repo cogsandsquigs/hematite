@@ -38,6 +38,32 @@ impl Simulation {
         }
     }
 
+    /// Runs a random game of Battlesnake, and returns the score.
+    /// `id` is the snake we are evaluating.
+    pub fn random_game(&mut self, id: &SnakeID) -> i32 {
+        while !self.is_game_over() {
+            self.random_step();
+        }
+
+        self.score(id)
+    }
+
+    /// Returns the score of the simulation. The score is 0 if there is a tie or if the
+    /// game is not over, 1 if `snake_id` won, and -1 if `snake_id` lost.
+    pub fn score(&self, id: &SnakeID) -> i32 {
+        if !self.is_game_over() {
+            0
+        } else if self.board.snakes.len() == 1 {
+            if self.board.snakes.contains_key(id) {
+                1
+            } else {
+                -1
+            }
+        } else {
+            0
+        }
+    }
+
     /// Run a step of the simulation of the game.
     pub fn step(&mut self, moves: &HashMap<SnakeID, Move>) {
         // If the game is not over, simulate a turn.
@@ -47,15 +73,24 @@ impl Simulation {
         }
     }
 
-    /// Run a random step of the simulation of the game.
-    pub fn random_step(&mut self) {
-        let moves = self.random_moves();
-        self.step(&moves);
+    /// A random set of moves for all snakes.
+    pub fn random_moves(&mut self) -> HashMap<SnakeID, Move> {
+        self.board
+            .snakes
+            .keys()
+            .map(|id| (*id, Move::random(&mut self.rng)))
+            .collect()
     }
 }
 
 /// Private API for the simulation - helper functions.
 impl Simulation {
+    /// Run a random step of the simulation of the game.
+    fn random_step(&mut self) {
+        let moves = self.random_moves();
+        self.step(&moves);
+    }
+
     /// Checks if the game is over.
     fn is_game_over(&self) -> bool {
         // If there is only 1 (or 0) snakes left, the game is over.
@@ -71,15 +106,6 @@ impl Simulation {
         let x = self.rng.gen_range(0..self.board.width as i32);
         let y = self.rng.gen_range(0..self.board.height as i32);
         (x, y).into()
-    }
-
-    /// A random set of moves for all snakes.
-    fn random_moves(&mut self) -> HashMap<SnakeID, Move> {
-        self.board
-            .snakes
-            .keys()
-            .map(|id| (*id, Move::random(&mut self.rng)))
-            .collect()
     }
 
     /// Put food on the board randomly, according to game rules.
