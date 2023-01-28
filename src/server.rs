@@ -10,7 +10,7 @@
 // To get you started we've included code to prevent your Snake from moving backwards.
 // For more info see docs.battlesnake.com
 
-use crate::{configuration::Config, engine::Engine, objects::state::GameState};
+use crate::{configuration::Config, engine::Engine, objects::GameState};
 use log::{debug, info, warn};
 use serde_json::{json, Value};
 use std::collections::HashMap;
