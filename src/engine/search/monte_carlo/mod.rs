@@ -76,21 +76,32 @@ impl MonteCarlo {
         todo!()
     }
 
-    /// Backpropagates the result of the simulation up the tree.
-    fn backpropagate(&mut self, mut path: Vec<Move>, won: bool) {
+    /// Backpropagates the result of the simulation up the tree. Expects that `path`
+    /// is ordered from the root to the leaf node.
+    fn backpropagate(&mut self, path: Vec<Move>, won: bool) {
         let mut current = &mut self.root;
+        let mut path = path.iter().rev().collect_vec();
+
+        // Update the root node.
+        current.visits += 1;
+        current.wins += u32::from(won);
+        current.children.values_mut().for_each(|child| {
+            child.parent_visits += 1;
+        });
 
         while let Some(move_) = path.pop() {
-            // Update the current node.
-            current.visits += 1;
-            current.wins += u32::from(won);
-            current.parent_visits += 1;
-
             // Move to the next node.
             current = current
                 .children
-                .get_mut(&move_)
+                .get_mut(move_)
                 .expect("The child node should exist!");
+
+            // Update the current node.
+            current.visits += 1;
+            current.wins += u32::from(won);
+            current.children.values_mut().for_each(|child| {
+                child.parent_visits += 1;
+            });
         }
     }
 }
