@@ -1,6 +1,6 @@
 mod modes;
-mod monte_carlo;
 mod rules;
+mod search;
 mod utils;
 
 use self::modes::Mode;

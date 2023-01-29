@@ -41,10 +41,10 @@ impl Board {
     }
 
     /// Gets all the other snakes on the board. Returns an iterator.
-    pub fn other_snakes<'a>(&'a self, you: &'a Snake) -> impl Iterator<Item = &'a Snake> + 'a {
+    pub fn other_snakes<'a>(&'a self, you: &'a SnakeID) -> impl Iterator<Item = &'a Snake> + 'a {
         self.snakes
             .iter()
-            .filter_map(|(id, snake)| if id != &you.id { Some(snake) } else { None })
+            .filter_map(move |(id, snake)| if id != you { Some(snake) } else { None })
     }
 }
 

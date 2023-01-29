@@ -10,7 +10,7 @@ use rand::seq::IteratorRandom;
 impl Engine {
     /// Get all the other snakes in the game.
     pub fn other_snakes(&self) -> impl Iterator<Item = &crate::objects::snake::Snake> {
-        self.state.board.other_snakes(&self.state.you)
+        self.state.board.other_snakes(&self.state.you.id)
     }
 
     /// Checks if a point is on the board
