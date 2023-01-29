@@ -15,15 +15,15 @@ use std::{
 };
 
 /// An update to the game state.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Update {
     /// The set of all moves to be made.
-    pub moves: Vec<(SnakeID, Move)>,
+    pub moves: HashMap<SnakeID, Move>,
 }
 
 impl Update {
     /// Create a new update.
-    pub fn new(moves: Vec<(SnakeID, Move)>) -> Self {
+    pub fn new(moves: HashMap<SnakeID, Move>) -> Self {
         Self { moves }
     }
 }
@@ -42,8 +42,11 @@ pub struct Simulation {
     /// The width of the board.
     width: u32,
 
-    /// The set of all snakes on the board.
-    snakes: HashMap<SnakeID, Rc<RefCell<Snake>>>,
+    /// The set of all living snakes on the board.
+    alive_snakes: HashMap<SnakeID, Rc<RefCell<Snake>>>,
+
+    /// The set of all dead snakes on the board.
+    dead_snakes: HashMap<SnakeID, Rc<RefCell<Snake>>>,
 
     /// The set of all food on the board.
     food: HashSet<Point>,
@@ -66,12 +69,13 @@ impl Simulation {
             turn: state.turn,
             height: state.board.height,
             width: state.board.width,
-            snakes: state
+            alive_snakes: state
                 .board
                 .snakes
                 .into_iter()
                 .map(|(id, snake)| (id, Rc::new(RefCell::new(snake))))
                 .collect(),
+            dead_snakes: HashMap::new(),
             food: state.board.food,
             hazards: state.board.hazards,
             // TODO: This is wrong. We need to check if the snakes ate food in the
@@ -79,13 +83,6 @@ impl Simulation {
             ate_food: HashSet::new(),
             rules: state.game.ruleset,
             snake_id: state.you.id,
-        }
-    }
-
-    /// Applies multiple game updates to the simulation.
-    pub fn apply_updates(&mut self, updates: &[Update]) {
-        for update in updates {
-            self.apply_update(update);
         }
     }
 
@@ -124,8 +121,13 @@ impl Clone for Simulation {
             turn: self.turn,
             height: self.height,
             width: self.width,
-            snakes: self
-                .snakes
+            alive_snakes: self
+                .alive_snakes
+                .iter()
+                .map(|(id, snake)| (*id, Rc::new(RefCell::new(snake.borrow().clone()))))
+                .collect(),
+            dead_snakes: self
+                .dead_snakes
                 .iter()
                 .map(|(id, snake)| (*id, Rc::new(RefCell::new(snake.borrow().clone()))))
                 .collect(),

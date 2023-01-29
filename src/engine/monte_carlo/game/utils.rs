@@ -1,18 +1,22 @@
-use super::{Simulation, Update};
-use crate::objects::{moves::Move, point::Point, settings::GameType, snake::SnakeID};
+use super::Simulation;
+use crate::objects::{moves::Move, point::Point, snake::SnakeID};
 use itertools::Itertools;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::collections::HashMap;
 
 impl Simulation {
-    /// Gets all the snake ids.
+    /// Gets all the snake ids, including dead snakes.
     pub fn snake_ids(&self) -> Vec<SnakeID> {
-        self.snakes.keys().cloned().collect()
+        self.alive_snakes
+            .keys()
+            .chain(self.dead_snakes.keys())
+            .copied()
+            .collect()
     }
 
     /// Gets the previous move of all the snakes.
     pub fn previous_moves(&self) -> HashMap<SnakeID, Move> {
-        self.snakes
+        self.alive_snakes
             .iter()
             .map(|(id, snake)| {
                 let head = snake.borrow().body[0];
@@ -32,30 +36,20 @@ impl Simulation {
         self.ate_food.contains(id)
     }
 
-    /// Checks if a game update results in immediate termination, or will do so on the next move.
-    /// We don't want to explore these updates, because they are not worthwile.
-    pub fn is_immediate_over(&self, update: &Update) -> bool {
-        let mut simulation = self.clone();
-
-        simulation.apply_update(update);
-
-        simulation.is_over()
-    }
-
     /// Checks if the game is terminated.
     pub fn is_over(&self) -> bool {
-        self.snakes.len() <= 1
+        self.alive_snakes.len() <= 1 || self.dead_snakes.contains_key(&self.snake_id)
     }
 
     /// Returns if we won the game.
     pub fn did_win(&self) -> bool {
-        self.is_over() && self.snakes.keys().contains(&self.snake_id)
+        self.is_over() && self.alive_snakes.keys().contains(&self.snake_id)
     }
 
     /// Moves a snake in the simulation.
     pub fn move_snake(&mut self, id: SnakeID, move_: Move) {
         let snake = self
-            .snakes
+            .alive_snakes
             .get(&id)
             .expect("The snake should exist in the simulation!");
 
@@ -83,28 +77,22 @@ impl Simulation {
         }
     }
 
-    /// Removes all the terminated snakes from the simulation.
+    /// Removes all the terminated snakes from the simulation, and put them in the
+    /// dead snakes set.
     pub fn remove_dead_snakes(&mut self) {
-        let mut terminated_snakes = Vec::new();
-
-        for snake in self.snakes.values() {
-            let snake = snake.borrow();
-
-            let head = snake.head;
+        for snake in self.alive_snakes.values() {
+            let head = snake.borrow().head;
 
             // If the snake's head is a wall, or if the snake's head is in its body, or if it has no more
-            // non-terminating moves, then it is terminated.
-            if self.is_dead(&snake.id, &head)
+            // non-lethal moves, then it is dead.
+            if self.will_die(&snake.borrow().id, &head)
                 || Move::all()
                     .iter()
-                    .all(|move_| self.is_dead(&snake.id, &move_.to_point(&head)))
+                    .all(|move_| self.will_die(&snake.borrow().id, &move_.to_point(&head)))
             {
-                terminated_snakes.push(snake.id);
+                self.dead_snakes.insert(snake.borrow().id, *snake);
+                self.alive_snakes.remove(&snake.borrow().id);
             }
-        }
-
-        for snake in terminated_snakes {
-            self.snakes.remove(&snake);
         }
     }
 
@@ -129,7 +117,7 @@ impl Simulation {
     pub fn spawn_hazards(&mut self) {}
 
     /// Check if a point results in a termination if it is interpreted as a move.
-    pub fn is_dead(&self, id: &SnakeID, point: &Point) -> bool {
+    pub fn will_die(&self, id: &SnakeID, point: &Point) -> bool {
         self.is_wall(point) || self.is_snake(id, point)
     }
 
@@ -141,12 +129,12 @@ impl Simulation {
     /// Check if a point is a snake, from the perspective of a snake.
     pub fn is_snake(&self, id: &SnakeID, point: &Point) -> bool {
         let you = self
-            .snakes
+            .alive_snakes
             .get(id)
             .expect("The snake should exist in the simulation!")
             .borrow();
 
-        for snake in self.snakes.values() {
+        for snake in self.alive_snakes.values() {
             let snake = snake.borrow();
 
             let length = snake.length;
