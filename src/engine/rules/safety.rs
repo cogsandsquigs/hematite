@@ -33,15 +33,15 @@ impl Engine {
             let tail = snake.tail();
 
             // If the point is in the snake's body, then it is a snake. Or, if the point is the tail, and the
-            // snake is longer than 3 tiles long or is moving into a food, then it is also counted as a body
+            // snake is less than 3 tiles long or is moving into a food, then it is also counted as a body
             // part.
             if init.contains(point)
                 || tail == *point
-                    && length >= 3
-                    && head
-                        .neighbors()
-                        .iter()
-                        .all(|neighbor| !self.food().contains(neighbor))
+                    && (length < 3
+                        || head
+                            .neighbors()
+                            .iter()
+                            .all(|neighbor| !self.food().contains(neighbor)))
             {
                 return true;
             }

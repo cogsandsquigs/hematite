@@ -7,7 +7,7 @@ use serde::Deserializer;
 use std::collections::{HashMap, HashSet};
 
 /// The board where the game is played.
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Board {
     /// The height of the board.
     pub height: u32,

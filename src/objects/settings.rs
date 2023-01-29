@@ -71,7 +71,7 @@ pub struct RulesetSquadSettings {
 /// - royale
 /// - constrictor
 /// - wrapped
-#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameType {
     #[serde(rename = "standard")]
     Standard,
