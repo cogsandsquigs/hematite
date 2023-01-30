@@ -3,7 +3,7 @@ mod monte_carlo;
 mod rules;
 mod utils;
 
-use self::modes::Mode;
+use self::{modes::Mode, monte_carlo::MonteCarlo};
 use crate::{
     configuration::engine::EngineConfig,
     objects::{moves::Move, point::Point, snake::Snake, GameState},
@@ -20,6 +20,9 @@ pub struct Engine {
 
     /// The current mode of the engine.
     mode: Mode,
+
+    /// The current monte-carlo search tree.
+    tree: MonteCarlo,
 }
 
 /// Public API for the engine.
@@ -28,16 +31,19 @@ impl Engine {
     pub fn new(config: EngineConfig, initial_state: GameState) -> Self {
         Self {
             config,
-            state: initial_state,
+            state: initial_state.clone(),
             mode: Mode::Hungry,
+            tree: MonteCarlo::new(initial_state),
         }
     }
 
     /// Update the engine with a new game state.
     pub fn update(&mut self, state: GameState) {
-        self.state = state;
+        self.state = state.clone();
         // Update the mode of the engine.
         self.update_mode();
+        // Update the monte-carlo search tree.
+        self.tree.update(state);
     }
 
     /// Get the next move for the snake. Should always be called before `update`, to
@@ -45,9 +51,8 @@ impl Engine {
     pub fn get_move(&mut self) -> Move {
         // Get the move the engine makes based on the mode it's in.
         let move_ = match self.mode {
-            Mode::Hungry => self.hungry_move(),
-            Mode::Defensive => self.defensive_move(),
-            Mode::Aggressive => self.aggressive_move(),
+            Mode::Hungry => self.searching_move(), //self.hungry_move(),
+            Mode::Searching => self.searching_move(),
         };
 
         match move_ {
@@ -70,7 +75,7 @@ impl Engine {
     }
 
     /// Get the health of the snake.
-    fn health(&self) -> u32 {
+    fn health(&self) -> i32 {
         self.state.you.health
     }
 

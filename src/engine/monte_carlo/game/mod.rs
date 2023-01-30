@@ -8,11 +8,9 @@ use crate::objects::{
     snake::{Snake, SnakeID},
     GameState,
 };
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use itertools::Itertools;
+use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
+use std::collections::{HashMap, HashSet};
 
 /// An update to the game state.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -29,6 +27,7 @@ impl Update {
 }
 
 /// The actual game state itself.
+#[derive(Debug, Clone)]
 pub struct Simulation {
     // The snake we're controlling.
     pub snake_id: SnakeID,
@@ -43,10 +42,10 @@ pub struct Simulation {
     width: u32,
 
     /// The set of all living snakes on the board.
-    alive_snakes: HashMap<SnakeID, Rc<RefCell<Snake>>>,
+    alive_snakes: HashMap<SnakeID, Snake>,
 
     /// The set of all dead snakes on the board.
-    dead_snakes: HashMap<SnakeID, Rc<RefCell<Snake>>>,
+    dead_snakes: HashMap<SnakeID, Snake>,
 
     /// The set of all food on the board.
     food: HashSet<Point>,
@@ -69,12 +68,7 @@ impl Simulation {
             turn: state.turn,
             height: state.board.height,
             width: state.board.width,
-            alive_snakes: state
-                .board
-                .snakes
-                .into_iter()
-                .map(|(id, snake)| (id, Rc::new(RefCell::new(snake))))
-                .collect(),
+            alive_snakes: state.board.snakes,
             dead_snakes: HashMap::new(),
             food: state.board.food,
             hazards: state.board.hazards,
@@ -90,52 +84,62 @@ impl Simulation {
     pub fn apply_update(&mut self, update: &Update) {
         // If the game is over, we don't want to apply any updates.
         if !self.is_over() {
-            // First, we apply the update.
-            for (id, move_) in &update.moves {
-                self.move_snake(*id, *move_);
+            let alive_snakes = self.alive_snakes.keys().copied().collect_vec();
+
+            // Move all the snakes.
+            for snake_id in alive_snakes {
+                let move_ = update.moves.get(&snake_id).unwrap_or(&Move::Up);
+                self.move_snake(snake_id, *move_);
             }
 
             // Then, we remove the snakes that have died.
             self.remove_dead_snakes();
 
-            // Finally, we spawn food and hazards.
+            // Finally, we spawn food.
             self.spawn_food();
-            self.spawn_hazards();
+            // TODO: Spawn hazards
 
             // Increment the turn counter.
             self.turn += 1;
         }
     }
-}
 
-/// A custom `Clone` implementation for the simulation.
-impl Clone for Simulation {
-    /// A custom `Clone` implementation for the simulation. This is necessary because
-    /// we don't want to clone the `Rc` and `RefCell` pointers, because that would
-    /// clone the references to the snakes, which we don't want to do. We only want
-    /// to clone the actual snakes. Therefore, when calling this, it is safe to do
-    /// `let sim = sim.clone()`, because the `Rc` and `RefCell` pointers will not be
-    /// cloned.
-    fn clone(&self) -> Self {
-        Self {
-            turn: self.turn,
-            height: self.height,
-            width: self.width,
-            alive_snakes: self
-                .alive_snakes
-                .iter()
-                .map(|(id, snake)| (*id, Rc::new(RefCell::new(snake.borrow().clone()))))
-                .collect(),
-            dead_snakes: self
-                .dead_snakes
-                .iter()
-                .map(|(id, snake)| (*id, Rc::new(RefCell::new(snake.borrow().clone()))))
-                .collect(),
-            food: self.food.clone(),
-            hazards: self.hazards.clone(),
-            ate_food: self.ate_food.clone(),
-            rules: self.rules.clone(),
-            snake_id: self.snake_id,
+    /// Runs a random game with good moves until the game is over. Returns if we won.
+    pub fn run_random_game(&mut self) -> bool {
+        let mut rng = SmallRng::from_entropy();
+
+        while !self.is_over() {
+            let possible_updates = self.possible_updates();
+            let update = possible_updates.choose(&mut rng).unwrap();
+
+            self.apply_update(update);
         }
+
+        self.did_win()
+    }
+
+    /// Gets all the possible updates that can be made, including those for dead
+    /// snakes.
+    pub fn possible_updates(&self) -> Vec<Update> {
+        self.snakes()
+            .map(|snake| {
+                let good_moves = self
+                    .good_moves(snake)
+                    .into_iter()
+                    .map(|move_| (snake.id, move_))
+                    .collect_vec();
+
+                // If there are no good moves, we use the previous move.
+                if good_moves.is_empty() {
+                    vec![(snake.id, snake.previous_move())]
+                }
+                // Otherwise, we use the good moves.
+                else {
+                    good_moves
+                }
+            })
+            .multi_cartesian_product()
+            .map(|moves| Update::new(moves.into_iter().collect()))
+            .collect_vec()
     }
 }

@@ -1,8 +1,5 @@
-use itertools::Itertools;
-
 use super::game::{Simulation, Update};
-use crate::objects::{moves::Move, snake::SnakeID};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 /// The different states a node can be in.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -42,20 +39,20 @@ pub struct Node {
 
 impl Node {
     /// Create a new node.
-    pub fn new(moves: HashMap<SnakeID, Move>) -> Self {
+    pub fn new(update: Update) -> Self {
         Self {
             visits: 0,
             wins: 0,
-            update: Update::new(moves.into_iter().collect()),
+            update,
             children: Vec::new(),
             max_updates: 0,
             state: NodeState::Leaf,
         }
     }
 
-    /// Check if this node has been visited.
-    pub fn is_visited(&self) -> bool {
-        self.visits > 0
+    /// Create an empty node.
+    pub fn empty() -> Self {
+        Self::new(Update::new(HashMap::new()))
     }
 
     /// Get the UCB1 value for this node.
@@ -83,7 +80,7 @@ impl Node {
     /// and then continue on with the other steps (expansion, simulation, backtracking).
     /// Returns if we won or not.
     /// TODO: Limit max depth?
-    pub fn select(&mut self, mut simulation: Simulation, depth: u32) -> bool {
+    pub fn select(&mut self, mut simulation: Simulation) -> bool {
         // Update the visits here for succinctness
         self.visits += 1;
         // Apply the move to the simulation
@@ -97,13 +94,21 @@ impl Node {
                     .best_child(self.visits)
                     .expect("This node should have children!");
 
-                best_child.select(simulation, depth + 1)
+                best_child.select(simulation)
             }
 
             // If we have not visited this node yet, then we initialize it and
             // expand it.
             NodeState::Leaf => {
-                todo!();
+                // Set the state to expandable
+                self.state = NodeState::Expandable;
+
+                // Create all the children
+                self.children = simulation
+                    .possible_updates()
+                    .iter()
+                    .map(|update| Node::new(update.clone()))
+                    .collect();
 
                 self.expand(simulation)
             }
@@ -119,9 +124,43 @@ impl Node {
         did_win
     }
 
-    /// Second step in MCTS. Expand the node and then simulate an outcome. Returns if we
-    /// won or not.
+    /// Second step in MCTS. Choose a node to expand, and expand it - i.e. run a simulation
+    /// from this node and backpropigate the result. Returns if we won or not.
     pub fn expand(&mut self, simulation: Simulation) -> bool {
-        todo!()
+        // Choose the first child which is a leaf to expand.
+        let child = self
+            .children
+            .iter_mut()
+            .find(|child| child.state == NodeState::Leaf)
+            .expect("This node should have children!");
+
+        let did_win = child.simulate(simulation);
+
+        // If all the children are not leaves, then we have expanded this node.
+        if self
+            .children
+            .iter()
+            .all(|child| child.state != NodeState::Leaf)
+        {
+            self.state = NodeState::Expanded;
+        }
+
+        did_win
+    }
+
+    /// Third step of MCTS. Run a simulation from this node and backpropigate the result.
+    /// Returns if we won or not.
+    pub fn simulate(&mut self, mut simulation: Simulation) -> bool {
+        // Run the simulation
+        let did_win = simulation.run_random_game();
+
+        // Backpropigate the result
+        self.visits += 1;
+
+        if did_win {
+            self.wins += 1;
+        }
+
+        did_win
     }
 }

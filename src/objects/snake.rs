@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::point::Point;
+use super::{moves::Move, point::Point};
 use serde::{ser::SerializeSeq, Deserialize, Deserializer, Serialize};
 
 /// A battlesnake. I tried to make this as efficient to copy/manipulate as possible, but
@@ -11,7 +11,7 @@ pub struct Snake {
     pub id: SnakeID,
 
     /// How much health the snake has. When health reaches 0, the snake dies.
-    pub health: u32,
+    pub health: i32,
 
     /// The snake's body. The array is ordered from head to tail.
     pub body: Vec<Point>,
@@ -39,6 +39,12 @@ impl Snake {
     /// Gets the snake's tail.
     pub fn tail(&self) -> Point {
         *self.body.last().expect("All snakes should have a tail.")
+    }
+
+    /// Gets the previous move of the snake.
+    pub fn previous_move(&self) -> Move {
+        Move::from_points(&self.body[1], &self.head)
+            .expect("Snake should have a valid previous move.")
     }
 }
 

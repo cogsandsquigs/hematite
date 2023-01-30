@@ -3,13 +3,16 @@
 
 mod game;
 mod node;
-mod utils;
 
-use self::{game::Simulation, node::Node};
-use crate::objects::GameState;
 use std::collections::HashMap;
 
+use itertools::Itertools;
+
+use self::{game::Simulation, node::Node};
+use crate::objects::{moves::Move, GameState};
+
 /// The Monte-Carlo search tree.
+#[derive(Debug, Clone)]
 pub struct MonteCarlo {
     /// The game simulation.
     state: Simulation,
@@ -24,7 +27,7 @@ impl MonteCarlo {
     pub fn new(state: GameState) -> Self {
         Self {
             state: Simulation::new(state),
-            root: Node::new(HashMap::new()),
+            root: Node::empty(),
         }
     }
 
@@ -35,48 +38,58 @@ impl MonteCarlo {
     pub fn update(&mut self, state: GameState) {
         self.state = Simulation::new(state);
 
-        todo!()
+        // TODO: prune tree
+        self.root = Node::empty();
     }
 
-    // /// Gets the evaluation of all the moves.
-    // pub fn move_scores(&self) -> HashMap<Move, f64> {
-    //     Move::all()
-    //         .into_iter()
-    //         .map(|move_| (move_, self.move_score(&move_)))
-    //         .collect()
-    // }
+    /// Runs the Monte Carlo search for a given amount of iterations.
+    pub fn search(&mut self, iterations: u32) {
+        for _ in 0..iterations {
+            self.run_round();
+        }
+    }
 
-    // /// Gets the evaluation of any move. Panics if the root node has no children.
-    // pub fn move_score(&self, move_: &Move) -> f64 {
-    //     // Gets all the child nodes that have the same move as the one we're evaluating.
-    //     let children = self
-    //         .children(&self.root.borrow())
-    //         .expect("The root should have children!")
-    //         .iter()
-    //         .filter(|child| {
-    //             child
-    //                 .borrow()
-    //                 .update
-    //                 .moves
-    //                 .iter()
-    //                 .any(|(id, m)| id == &self.state.snake_id && m == move_)
-    //         })
-    //         .collect_vec();
+    /// Gets the number of wins
+    pub fn wins(&self) -> u32 {
+        self.root.wins
+    }
 
-    //     // If there are no children with the same move, then we haven't visited this
-    //     // move yet. Return 0.0.
-    //     if children.is_empty() {
-    //         0.0
-    //     }
-    //     // Otherwise, calculate the average win rate of all the children.
-    //     else {
-    //         let (wins, visits) = children.iter().fold((0, 0), |(wins, visits), child| {
-    //             (wins + child.borrow().wins, visits + child.borrow().visits)
-    //         });
+    /// Gets the evaluation of all the moves.
+    pub fn move_scores(&self) -> HashMap<Move, f64> {
+        Move::all()
+            .into_iter()
+            .map(|move_| (move_, self.move_score(&move_)))
+            .collect()
+    }
 
-    //         wins as f64 / visits as f64
-    //     }
-    // }
+    /// Gets the evaluation of any move. Panics if the root node has no children.
+    pub fn move_score(&self, move_: &Move) -> f64 {
+        // Gets all the child nodes that have the same move as the one we're evaluating.
+        let children = self
+            .root
+            .children
+            .iter()
+            .filter(|child| {
+                child.update.moves.iter().any(|(id, m)| {
+                    println!(
+                        "{:?} == {:?} && {:?} == {:?}",
+                        id, self.state.snake_id, m, move_
+                    );
+                    id == &self.state.snake_id && m == move_
+                })
+            })
+            .collect_vec();
+
+        // If there are no children with the same move, then we haven't visited this
+        // move yet. Return 0.0.
+        if children.is_empty() {
+            0.0
+        }
+        // Otherwise, calculate the average win rate of all the children.
+        else {
+            (children.iter().map(|child| child.wins).sum::<u32>() as f64) / self.root.visits as f64
+        }
+    }
 }
 
 /// Private API for the Monte Carlo search tree.
@@ -87,6 +100,6 @@ impl MonteCarlo {
         let simulation = self.state.clone();
 
         // Recursively descend the tree until we reach a leaf node.
-        self.root.select(simulation, 0);
+        self.root.select(simulation);
     }
 }
