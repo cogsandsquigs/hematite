@@ -146,13 +146,22 @@ impl Simulation {
     }
 
     /// Gets all the good moves a snake can make. A good move is one where it avoids both
-    /// the walls, and itself.
-    pub fn good_moves(&self, snake: &Snake) -> Vec<Move> {
+    /// the walls, and itself. `use_state` is a boolean that determines if the snake can
+    /// consider the game state (including other snakes) or not. This is usually false when
+    /// getting good moves outside of a simulation (but during MCTS), and true when getting
+    /// good moves inside a simulation.
+    pub fn good_moves(&self, snake: &Snake, use_state: bool) -> Vec<Move> {
         Move::all()
             .iter()
             .filter(|move_| {
                 let new_head = move_.to_point(&snake.head);
-                !self.is_in_wall(&new_head) && !snake.body.contains(&new_head)
+                !self.is_in_wall(&new_head) && !snake.body.contains(&new_head) && {
+                    if use_state {
+                        !self.is_in_snake(snake)
+                    } else {
+                        true
+                    }
+                }
             })
             .copied()
             .collect()

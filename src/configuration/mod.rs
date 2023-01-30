@@ -1,4 +1,5 @@
 pub mod engine;
+pub mod mcts;
 pub mod snake;
 
 use self::{engine::EngineConfig, snake::SnakeConfig};

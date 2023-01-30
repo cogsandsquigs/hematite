@@ -9,7 +9,10 @@ use std::collections::HashMap;
 use itertools::Itertools;
 
 use self::{game::Simulation, node::Node};
-use crate::objects::{moves::Move, GameState};
+use crate::{
+    configuration::mcts::MCTSConfig,
+    objects::{moves::Move, GameState},
+};
 
 /// The Monte-Carlo search tree.
 #[derive(Debug, Clone)]
@@ -19,15 +22,18 @@ pub struct MonteCarlo {
 
     /// The root node of the tree.
     root: Node,
+    // The configuration for the Monte Carlo search tree.
+    config: MCTSConfig,
 }
 
 /// Public API for the Monte Carlo search tree.
 impl MonteCarlo {
     /// Create a new Monte Carlo search tree.
-    pub fn new(state: GameState) -> Self {
+    pub fn new(state: GameState, config: MCTSConfig) -> Self {
         Self {
             state: Simulation::new(state),
             root: Node::empty(),
+            config,
         }
     }
 
@@ -54,6 +60,11 @@ impl MonteCarlo {
         self.root.wins
     }
 
+    /// Gets the number of visits
+    pub fn visits(&self) -> u32 {
+        self.root.visits
+    }
+
     /// Gets the evaluation of all the moves.
     pub fn move_scores(&self) -> HashMap<Move, f64> {
         Move::all()
@@ -70,19 +81,18 @@ impl MonteCarlo {
             .children
             .iter()
             .filter(|child| {
-                child.update.moves.iter().any(|(id, m)| {
-                    println!(
-                        "{:?} == {:?} && {:?} == {:?}",
-                        id, self.state.snake_id, m, move_
-                    );
-                    id == &self.state.snake_id && m == move_
-                })
+                child
+                    .update
+                    .moves
+                    .iter()
+                    .any(|(id, m)| id == &self.state.snake_id && m == move_)
             })
             .collect_vec();
 
         // If there are no children with the same move, then we haven't visited this
         // move yet. Return 0.0.
         if children.is_empty() {
+            println!("test");
             0.0
         }
         // Otherwise, calculate the average win rate of all the children.
@@ -100,6 +110,6 @@ impl MonteCarlo {
         let simulation = self.state.clone();
 
         // Recursively descend the tree until we reach a leaf node.
-        self.root.select(simulation);
+        self.root.select(&self.config, simulation);
     }
 }

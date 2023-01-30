@@ -19,6 +19,9 @@
 		[package.metadata.engine]
 			hungry_moves = 50 # Stay hungry for the first 50 moves
 
+			[package.metadata.engine.mcts]
+				games_per_search = 15 # The number of games to play per search
+
 [dependencies]
 	# Server and logging
 	env_logger = "0.9.0"                                         # For logging
@@ -27,11 +30,12 @@
 
 	# Serialization and deserialization of json and toml
 	cargo_toml = "0.14.0"                                       # For parsing the Cargo.toml file to read the configuration
-	serde      = { version = "1.0.117", features = ["derive"] }
+	serde      = { version = "1.0.117", features = ["derive"] } # Parsing
 	serde_json = "1.0.59"                                       # Parsing JSON
 	toml       = "0.5.11"                                       # Parsing TOML
 
 	# Misc.
-	itertools = "0.10.5"
-	rand      = { version = "0.8.5", features = ["small_rng"] }
-	uuid      = { version = "1.2.2", features = ["serde"] }
+	itertools = "0.10.5"                                        # Iterator utilities
+	rand      = { version = "0.8.5", features = ["small_rng"] } # For random numbers
+	rayon     = "1.6.1"                                         # For parallelism
+	uuid      = { version = "1.2.2", features = ["serde"] }     # Parsing game UUIDs

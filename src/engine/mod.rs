@@ -33,7 +33,7 @@ impl Engine {
             config,
             state: initial_state.clone(),
             mode: Mode::Hungry,
-            tree: MonteCarlo::new(initial_state),
+            tree: MonteCarlo::new(initial_state, config.mcts),
         }
     }
 

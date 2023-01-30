@@ -1,3 +1,7 @@
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+
+use crate::configuration::mcts::MCTSConfig;
+
 use super::game::{Simulation, Update};
 use std::collections::HashMap;
 
@@ -80,13 +84,13 @@ impl Node {
     /// and then continue on with the other steps (expansion, simulation, backtracking).
     /// Returns if we won or not.
     /// TODO: Limit max depth?
-    pub fn select(&mut self, mut simulation: Simulation) -> bool {
+    pub fn select(&mut self, config: &MCTSConfig, mut simulation: Simulation) -> u32 {
         // Update the visits here for succinctness
-        self.visits += 1;
+        self.visits += config.games_per_search;
         // Apply the move to the simulation
         simulation.apply_update(&self.update);
 
-        let did_win = match self.state {
+        let wins = match self.state {
             // If this node is not a leaf or expandable node, we keep searching.
             NodeState::Expanded => {
                 // Get the best child
@@ -94,7 +98,7 @@ impl Node {
                     .best_child(self.visits)
                     .expect("This node should have children!");
 
-                best_child.select(simulation)
+                best_child.select(config, simulation)
             }
 
             // If we have not visited this node yet, then we initialize it and
@@ -105,28 +109,27 @@ impl Node {
 
                 // Create all the children
                 self.children = simulation
-                    .possible_updates()
+                    .possible_updates(false)
                     .iter()
                     .map(|update| Node::new(update.clone()))
                     .collect();
 
-                self.expand(simulation)
+                self.expand(config, simulation)
             }
 
             // If we have already started to expand this node, then expand this node.
-            NodeState::Expandable => self.expand(simulation),
+            NodeState::Expandable => self.expand(config, simulation),
         };
 
-        if did_win {
-            self.wins += 1;
-        }
+        // Backpropigate the result
+        self.wins += wins;
 
-        did_win
+        wins
     }
 
     /// Second step in MCTS. Choose a node to expand, and expand it - i.e. run a simulation
     /// from this node and backpropigate the result. Returns if we won or not.
-    pub fn expand(&mut self, simulation: Simulation) -> bool {
+    pub fn expand(&mut self, config: &MCTSConfig, simulation: Simulation) -> u32 {
         // Choose the first child which is a leaf to expand.
         let child = self
             .children
@@ -134,7 +137,7 @@ impl Node {
             .find(|child| child.state == NodeState::Leaf)
             .expect("This node should have children!");
 
-        let did_win = child.simulate(simulation);
+        let wins = child.simulate(config, simulation);
 
         // If all the children are not leaves, then we have expanded this node.
         if self
@@ -145,22 +148,24 @@ impl Node {
             self.state = NodeState::Expanded;
         }
 
-        did_win
+        wins
     }
 
     /// Third step of MCTS. Run a simulation from this node and backpropigate the result.
-    /// Returns if we won or not.
-    pub fn simulate(&mut self, mut simulation: Simulation) -> bool {
+    /// Returns how many times we won.
+    pub fn simulate(&mut self, config: &MCTSConfig, simulation: Simulation) -> u32 {
         // Run the simulation
-        let did_win = simulation.run_random_game();
+        let wins: u32 = (0..config.games_per_search)
+            .into_par_iter()
+            // Run the simulation
+            .map(|_| simulation.clone().run_random_game())
+            .fold(|| 0, |acc, did_win| if did_win { acc + 1 } else { acc })
+            .sum();
 
         // Backpropigate the result
-        self.visits += 1;
+        self.visits += config.games_per_search;
+        self.wins += wins;
 
-        if did_win {
-            self.wins += 1;
-        }
-
-        did_win
+        wins
     }
 }

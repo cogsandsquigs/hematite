@@ -109,7 +109,9 @@ impl Simulation {
         let mut rng = SmallRng::from_entropy();
 
         while !self.is_over() {
-            let possible_updates = self.possible_updates();
+            // Apply a random update. Set `use_state` to true because we can consider
+            // the state of the board when making a move during a random rollout.
+            let possible_updates = self.possible_updates(true);
             let update = possible_updates.choose(&mut rng).unwrap();
 
             self.apply_update(update);
@@ -120,11 +122,11 @@ impl Simulation {
 
     /// Gets all the possible updates that can be made, including those for dead
     /// snakes.
-    pub fn possible_updates(&self) -> Vec<Update> {
+    pub fn possible_updates(&self, use_state: bool) -> Vec<Update> {
         self.snakes()
             .map(|snake| {
                 let good_moves = self
-                    .good_moves(snake)
+                    .good_moves(snake, use_state)
                     .into_iter()
                     .map(|move_| (snake.id, move_))
                     .collect_vec();

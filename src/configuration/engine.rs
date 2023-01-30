@@ -1,3 +1,4 @@
+use super::mcts::MCTSConfig;
 use serde::{Deserialize, Serialize};
 
 /// The structure holding the configuration for the engine.
@@ -6,6 +7,10 @@ pub struct EngineConfig {
     /// How many moves to be hungry for (i.e., the number of initial moves the snake is hungry for).
     #[serde(default = "EngineConfig::default_hungry_moves")]
     pub hungry_moves: u32,
+
+    /// The MCTS configuration.
+    #[serde(default)]
+    pub mcts: MCTSConfig,
 }
 
 impl EngineConfig {
@@ -19,6 +24,7 @@ impl Default for EngineConfig {
     fn default() -> Self {
         Self {
             hungry_moves: Self::default_hungry_moves(),
+            mcts: MCTSConfig::default(),
         }
     }
 }
