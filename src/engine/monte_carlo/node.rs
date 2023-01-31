@@ -1,20 +1,19 @@
+use super::game::Simulation;
+use crate::{configuration::mcts::MCTSConfig, objects::moves::Move};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
-
-use crate::configuration::mcts::MCTSConfig;
-
-use super::game::{Simulation, Update};
-use std::collections::HashMap;
 
 /// The different states a node can be in.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum NodeState {
-    /// The node has not yet been visited/expanded.
+    /// The node has not yet been visited/expanded. We need to create its children
+    /// and then explore them.
     Leaf,
 
-    /// The node has been visited, but not fully expanded.
-    Expandable,
+    /// The node has been visited, but not fully expanded. We still need to explore
+    /// some of its children.
+    Visited,
 
-    /// The node has been fully expanded.
+    /// The node has been fully expanded. We can now select the best child to explore.
     Expanded,
 }
 
@@ -22,8 +21,8 @@ pub enum NodeState {
 /// made at this node, and contains its children.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Node {
-    /// The game update that led to this node.
-    pub update: Update,
+    /// The move that lead to this node.
+    pub move_: Move,
 
     /// The number of times this node has been visited.
     pub visits: u32,
@@ -34,29 +33,31 @@ pub struct Node {
     /// The state of the node: What we can/should do with it.
     pub state: NodeState,
 
-    /// The maximum amount of different child game states allowed at this node.
-    pub max_updates: usize,
-
     /// The children of this node.
     pub children: Vec<Node>,
 }
 
 impl Node {
     /// Create a new node.
-    pub fn new(update: Update) -> Self {
+    pub fn new(move_: Move) -> Self {
         Self {
             visits: 0,
             wins: 0,
-            update,
-            children: Vec::new(),
-            max_updates: 0,
             state: NodeState::Leaf,
+            move_,
+            children: Vec::new(),
         }
     }
 
-    /// Create an empty node.
+    /// Create an empty node. By default, an empty node is a leaf node.
     pub fn empty() -> Self {
-        Self::new(Update::new(HashMap::new()))
+        Self {
+            visits: 0,
+            wins: 0,
+            state: NodeState::Leaf,
+            move_: Move::Up,
+            children: Vec::new(),
+        }
     }
 
     /// Get the UCB1 value for this node.
@@ -84,41 +85,44 @@ impl Node {
     /// and then continue on with the other steps (expansion, simulation, backtracking).
     /// Returns if we won or not.
     /// TODO: Limit max depth?
-    pub fn select(&mut self, config: &MCTSConfig, mut simulation: Simulation) -> u32 {
+    pub fn select(&mut self, config: &MCTSConfig, mut simulation: Simulation, root: bool) -> u32 {
         // Update the visits here for succinctness
         self.visits += config.games_per_search;
-        // Apply the move to the simulation
-        simulation.apply_update(&self.update);
+
+        // If this is not the root node, then we need to apply the move to the simulation. We
+        // can't apply the root node move because the root node is really just a placeholder
+        // for the current state, and the move is not actually a move.
+        if !root {
+            // Apply the move to the simulation
+            simulation.apply_move(&self.move_);
+        }
 
         let wins = match self.state {
-            // If this node is not a leaf or expandable node, we keep searching.
+            // If this node has been fully expanded, then we search down it to find the best
+            // child to expand.
             NodeState::Expanded => {
                 // Get the best child
                 let best_child = self
                     .best_child(self.visits)
                     .expect("This node should have children!");
 
-                best_child.select(config, simulation)
+                best_child.select(config, simulation, false)
             }
 
             // If we have not visited this node yet, then we initialize it and
             // expand it.
             NodeState::Leaf => {
-                // Set the state to expandable
-                self.state = NodeState::Expandable;
+                // Set the state to visited
+                self.state = NodeState::Visited;
 
                 // Create all the children
-                self.children = simulation
-                    .possible_updates(false)
-                    .iter()
-                    .map(|update| Node::new(update.clone()))
-                    .collect();
+                self.children = simulation.snake_moves().map(Node::new).collect();
 
                 self.expand(config, simulation)
             }
 
-            // If we have already started to expand this node, then expand this node.
-            NodeState::Expandable => self.expand(config, simulation),
+            // If we have already visited, then expand this node more.
+            NodeState::Visited => self.expand(config, simulation),
         };
 
         // Backpropigate the result
@@ -139,27 +143,29 @@ impl Node {
 
         let wins = child.simulate(config, simulation);
 
-        // If all the children are not leaves, then we have expanded this node.
-        if self
-            .children
-            .iter()
-            .all(|child| child.state != NodeState::Leaf)
-        {
+        child.visits += config.games_per_search;
+        child.wins += wins;
+
+        // If all the children have been visited once, then we can set the state to expanded.
+        if self.children.iter().all(|child| child.visits > 0) {
             self.state = NodeState::Expanded;
         }
 
         wins
     }
 
-    /// Third step of MCTS. Run a simulation from this node and backpropigate the result.
+    /// Third step of MCTS. Apply the child move, run a simulation from this node and backpropigate the result.
     /// Returns how many times we won.
-    pub fn simulate(&mut self, config: &MCTSConfig, simulation: Simulation) -> u32 {
+    pub fn simulate(&mut self, config: &MCTSConfig, mut simulation: Simulation) -> u32 {
+        // Apply the move to the simulation
+        simulation.apply_move(&self.move_);
+
         // Run the simulation
         let wins: u32 = (0..config.games_per_search)
             .into_par_iter()
             // Run the simulation
             .map(|_| simulation.clone().run_random_game())
-            .fold(|| 0, |acc, did_win| if did_win { acc + 1 } else { acc })
+            .map(u32::from)
             .sum();
 
         // Backpropigate the result

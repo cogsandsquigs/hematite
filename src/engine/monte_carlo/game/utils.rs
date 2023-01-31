@@ -5,14 +5,9 @@ use crate::objects::{
     snake::{Snake, SnakeID},
 };
 use itertools::Itertools;
-use rand::{rngs::SmallRng, Rng, SeedableRng};
+use rand::{rngs::SmallRng, seq::SliceRandom, Rng, SeedableRng};
 
 impl Simulation {
-    /// Gets an iterator of all the snakes, alive or dead.
-    pub fn snakes(&self) -> impl Iterator<Item = &Snake> {
-        self.alive_snakes.values().chain(self.dead_snakes.values())
-    }
-
     /// Checks if the game is terminated.
     pub fn is_over(&self) -> bool {
         self.alive_snakes.len() <= 1 || self.dead_snakes.contains_key(&self.snake_id)
@@ -91,15 +86,30 @@ impl Simulation {
 
     /// Spawn food in the simulation.
     pub fn spawn_food(&mut self) {
-        if self.food.len() < self.rules.settings.minimum_food as usize
-            || SmallRng::from_entropy().gen_bool(self.rules.settings.food_spawn_chance)
-        {
-            let mut rng = SmallRng::from_entropy();
+        let mut rng = SmallRng::from_entropy();
 
-            let point = Point::new(
+        if self.food.len() < self.rules.settings.minimum_food as usize
+            || rng.gen_bool(self.rules.settings.food_spawn_chance)
+        {
+            let mut point = Point::new(
                 rng.gen_range(0..self.width as i32),
                 rng.gen_range(0..self.height as i32),
             );
+
+            // While the point is in a snake, or other food, generate a new point.
+            // TODO: Make this more efficient.
+            while self
+                .alive_snakes
+                .values()
+                .flat_map(|snake| snake.body.iter())
+                .contains(&point)
+                || self.food.contains(&point)
+            {
+                point = Point::new(
+                    rng.gen_range(0..self.width as i32),
+                    rng.gen_range(0..self.height as i32),
+                );
+            }
 
             self.food.insert(point);
         }
@@ -116,27 +126,17 @@ impl Simulation {
     }
 
     /// Check if a point is a snake, from the perspective of a snake.
+    /// TODO: Allow a move inside a snake's tail IF it is greater than 2 long
+    /// OR if it is not consuming food.
     pub fn is_in_snake(&self, snake: &Snake) -> bool {
-        for other in self.alive_snakes.values() {
-            // All of the other snake's body except for the head and tail.
-            let other_body = &other.body[1..other.body.len() - 1];
-            // The tail of the other snake.
-            let other_tail = other.tail();
-
-            // If the point is in the snake's body, then it is a snake. Or, if the point is a head, and we
-            // are less than the other snake, then it is a body part. Or, if the point is the tail, and the
-            // snake is less than 3 tiles long or is moving into a food, then it is also counted as a body
-            // part.
-            if other_body.contains(&snake.head)
-                //|| (other.head == snake.head && (snake.length <= other.length))
-                || other_tail == snake.head
-                    && (snake.length < 3
-                        || snake
-                            .head
-                            .neighbors()
-                            .iter()
-                            .all(|neighbor| !self.food.contains(neighbor)))
-            {
+        for other in self
+            .alive_snakes
+            .values()
+            .filter(|other| other.id != snake.id)
+        {
+            // If the snake is in the other snake's body (excluding the tail because it
+            // moves out of the way), then it is in a snake.
+            if other.body[..other.body.len() - 1].contains(&snake.head) {
                 return true;
             }
         }
@@ -146,17 +146,22 @@ impl Simulation {
     }
 
     /// Gets all the good moves a snake can make. A good move is one where it avoids both
-    /// the walls, and itself. `use_state` is a boolean that determines if the snake can
-    /// consider the game state (including other snakes) or not. This is usually false when
-    /// getting good moves outside of a simulation (but during MCTS), and true when getting
-    /// good moves inside a simulation.
-    pub fn good_moves(&self, snake: &Snake, use_state: bool) -> Vec<Move> {
+    /// the walls, and itself. `is_node_move` is a boolean that determines if the snake can
+    /// consider the game state (including other snakes) or not. This is usually true when
+    /// getting good moves outside of a simulation (during MCTS), and false when getting good
+    /// moves inside a simulation (where we can consider other snake's moves)
+    pub fn good_moves(&self, snake: &Snake, is_node_move: bool) -> Vec<Move> {
         Move::all()
             .iter()
             .filter(|move_| {
                 let new_head = move_.to_point(&snake.head);
                 !self.is_in_wall(&new_head) && !snake.body.contains(&new_head) && {
-                    if use_state {
+                    // If we are not in a node move, then we check if the snake is in a snake.
+                    // Otherwise, we just return true, because we can't consider other snakes.
+                    // That could lead to a scenario where we could run into a snake's tail in
+                    // one round of MCTS, but not in the next (due to food spawning), and then
+                    // we would think that the move is bad, when it is not.
+                    if !is_node_move {
                         !self.is_in_snake(snake)
                     } else {
                         true
@@ -165,5 +170,19 @@ impl Simulation {
             })
             .copied()
             .collect()
+    }
+
+    /// Gets a random good move for a snake ID. This is used for the random bot. Panics if the
+    /// snake doesn't exist.
+    pub fn random_good_move(&self, id: &SnakeID) -> Move {
+        let snake = self.alive_snakes.get(id).expect("The snake should exist!");
+        let good_moves = self.good_moves(snake, false);
+        let mut rng = SmallRng::from_entropy();
+
+        *good_moves
+            .choose(&mut rng)
+            // If there are no good moves, then we just return Up. This is not random, but
+            // in this case, it doesn't matter. The snake will die anyway.
+            .unwrap_or(&Move::Up)
     }
 }

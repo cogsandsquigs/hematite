@@ -4,31 +4,30 @@
 mod game;
 mod node;
 
-use std::collections::HashMap;
-
-use itertools::Itertools;
-
 use self::{game::Simulation, node::Node};
 use crate::{
     configuration::mcts::MCTSConfig,
     objects::{moves::Move, GameState},
 };
+use std::collections::HashMap;
 
 /// The Monte-Carlo search tree.
 #[derive(Debug, Clone)]
 pub struct MonteCarlo {
+    // The configuration for the Monte Carlo search tree.
+    config: MCTSConfig,
+
     /// The game simulation.
     state: Simulation,
 
     /// The root node of the tree.
     root: Node,
-    // The configuration for the Monte Carlo search tree.
-    config: MCTSConfig,
 }
 
 /// Public API for the Monte Carlo search tree.
 impl MonteCarlo {
-    /// Create a new Monte Carlo search tree.
+    /// Create a new Monte Carlo search tree. Since the root node is not considered
+    /// an actual move, it is represented by an empty node.
     pub fn new(state: GameState, config: MCTSConfig) -> Self {
         Self {
             state: Simulation::new(state),
@@ -73,31 +72,24 @@ impl MonteCarlo {
             .collect()
     }
 
-    /// Gets the evaluation of any move. Panics if the root node has no children.
+    /// Gets the evaluation of any move.
     pub fn move_score(&self, move_: &Move) -> f64 {
-        // Gets all the child nodes that have the same move as the one we're evaluating.
-        let children = self
+        // Gets the child node that has the same move as the one we're evaluating.
+        let child = self
             .root
             .children
             .iter()
-            .filter(|child| {
-                child
-                    .update
-                    .moves
-                    .iter()
-                    .any(|(id, m)| id == &self.state.snake_id && m == move_)
-            })
-            .collect_vec();
+            // Since there should only be one child with a given move, we can use
+            // `find` instead of `filter`.
+            .find(|child| &child.move_ == move_);
 
-        // If there are no children with the same move, then we haven't visited this
-        // move yet. Return 0.0.
-        if children.is_empty() {
-            println!("test");
-            0.0
+        // If such a child exists, return the evaluation of the move.
+        if let Some(Node { wins, .. }) = child {
+            *wins as f64 / self.root.visits as f64
         }
-        // Otherwise, calculate the average win rate of all the children.
+        // Otherwise, if such a child does not exist, return 0.
         else {
-            (children.iter().map(|child| child.wins).sum::<u32>() as f64) / self.root.visits as f64
+            0.0
         }
     }
 }
@@ -110,6 +102,6 @@ impl MonteCarlo {
         let simulation = self.state.clone();
 
         // Recursively descend the tree until we reach a leaf node.
-        self.root.select(&self.config, simulation);
+        self.root.select(&self.config, simulation, true);
     }
 }

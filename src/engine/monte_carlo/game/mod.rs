@@ -9,22 +9,7 @@ use crate::objects::{
     GameState,
 };
 use itertools::Itertools;
-use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
 use std::collections::{HashMap, HashSet};
-
-/// An update to the game state.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Update {
-    /// The set of all moves to be made.
-    pub moves: HashMap<SnakeID, Move>,
-}
-
-impl Update {
-    /// Create a new update.
-    pub fn new(moves: HashMap<SnakeID, Move>) -> Self {
-        Self { moves }
-    }
-}
 
 /// The actual game state itself.
 #[derive(Debug, Clone)]
@@ -80,16 +65,23 @@ impl Simulation {
         }
     }
 
-    /// Applies a game update to the simulation.
-    pub fn apply_update(&mut self, update: &Update) {
+    /// Applies a game move we make to the simulation. All other snakes are moved
+    /// randomly.
+    pub fn apply_move(&mut self, move_: &Move) {
         // If the game is over, we don't want to apply any updates.
         if !self.is_over() {
             let alive_snakes = self.alive_snakes.keys().copied().collect_vec();
 
             // Move all the snakes.
             for snake_id in alive_snakes {
-                let move_ = update.moves.get(&snake_id).unwrap_or(&Move::Up);
-                self.move_snake(snake_id, *move_);
+                // If this snake is us, we apply the move we made.
+                if snake_id == self.snake_id {
+                    self.move_snake(snake_id, *move_);
+                }
+                // Otherwise, we move the snake using a good move.
+                else {
+                    self.move_snake(snake_id, self.random_good_move(&snake_id));
+                }
             }
 
             // Then, we remove the snakes that have died.
@@ -104,44 +96,29 @@ impl Simulation {
         }
     }
 
-    /// Runs a random game with good moves until the game is over. Returns if we won.
-    pub fn run_random_game(&mut self) -> bool {
-        let mut rng = SmallRng::from_entropy();
+    /// Gets all the good moves we can make.
+    pub fn allowed_moves(&self) -> impl Iterator<Item = Move> {
+        let snake = self.alive_snakes.get(&self.snake_id);
 
-        while !self.is_over() {
-            // Apply a random update. Set `use_state` to true because we can consider
-            // the state of the board when making a move during a random rollout.
-            let possible_updates = self.possible_updates(true);
-            let update = possible_updates.choose(&mut rng).unwrap();
-
-            self.apply_update(update);
+        // If we are alive, we return all the good moves we can make.
+        if let Some(snake) = snake {
+            self.good_moves(snake, true).into_iter()
         }
-
-        self.did_win()
+        // Otherwise, we return an empty iterator. We can't make any moves :(.
+        else {
+            vec![].into_iter()
+        }
     }
 
-    /// Gets all the possible updates that can be made, including those for dead
-    /// snakes.
-    pub fn possible_updates(&self, use_state: bool) -> Vec<Update> {
-        self.snakes()
-            .map(|snake| {
-                let good_moves = self
-                    .good_moves(snake, use_state)
-                    .into_iter()
-                    .map(|move_| (snake.id, move_))
-                    .collect_vec();
+    /// Runs a random game with the current state. Returns if we won or not.
+    pub fn run_random_game(&self) -> bool {
+        let mut simulation = self.clone();
 
-                // If there are no good moves, we use the previous move.
-                if good_moves.is_empty() {
-                    vec![(snake.id, snake.previous_move())]
-                }
-                // Otherwise, we use the good moves.
-                else {
-                    good_moves
-                }
-            })
-            .multi_cartesian_product()
-            .map(|moves| Update::new(moves.into_iter().collect()))
-            .collect_vec()
+        while !simulation.is_over() {
+            let move_ = simulation.random_good_move(&simulation.snake_id);
+            simulation.apply_move(&move_);
+        }
+
+        simulation.did_win()
     }
 }

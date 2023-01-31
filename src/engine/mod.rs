@@ -51,7 +51,7 @@ impl Engine {
     pub fn get_move(&mut self) -> Move {
         // Get the move the engine makes based on the mode it's in.
         let move_ = match self.mode {
-            Mode::Hungry => self.searching_move(), //self.hungry_move(),
+            Mode::Hungry => self.hungry_move(),
             Mode::Searching => self.searching_move(),
         };
 
