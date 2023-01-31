@@ -1,12 +1,13 @@
 use super::game::Simulation;
-use crate::{configuration::mcts::MCTSConfig, objects::moves::Move};
-use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+use crate::objects::moves::Move;
+use rayon::prelude::*;
 
 /// The different states a node can be in.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub enum NodeState {
     /// The node has not yet been visited/expanded. We need to create its children
     /// and then explore them.
+    #[default]
     Leaf,
 
     /// The node has been visited, but not fully expanded. We still need to explore
@@ -81,97 +82,18 @@ impl Node {
             .max_by(|a, b| a.ucb1(parent_visits).total_cmp(&b.ucb1(parent_visits)))
     }
 
-    /// The first step in MCTS. Recursively descend the tree until we reach a leaf node,
-    /// and then continue on with the other steps (expansion, simulation, backtracking).
-    /// Returns if we won or not.
-    /// TODO: Limit max depth?
-    pub fn select(&mut self, config: &MCTSConfig, mut simulation: Simulation, root: bool) -> u32 {
-        // Update the visits here for succinctness
-        self.visits += config.games_per_search;
-
-        // If this is not the root node, then we need to apply the move to the simulation. We
-        // can't apply the root node move because the root node is really just a placeholder
-        // for the current state, and the move is not actually a move.
-        if !root {
-            // Apply the move to the simulation
-            simulation.apply_move(&self.move_);
-        }
-
-        let wins = match self.state {
-            // If this node has been fully expanded, then we search down it to find the best
-            // child to expand.
-            NodeState::Expanded => {
-                // Get the best child
-                let best_child = self
-                    .best_child(self.visits)
-                    .expect("This node should have children!");
-
-                best_child.select(config, simulation, false)
-            }
-
-            // If we have not visited this node yet, then we initialize it and
-            // expand it.
-            NodeState::Leaf => {
-                // Set the state to visited
-                self.state = NodeState::Visited;
-
-                // Create all the children
-                self.children = simulation.snake_moves().map(Node::new).collect();
-
-                self.expand(config, simulation)
-            }
-
-            // If we have already visited, then expand this node more.
-            NodeState::Visited => self.expand(config, simulation),
-        };
-
-        // Backpropigate the result
-        self.wins += wins;
-
-        wins
-    }
-
-    /// Second step in MCTS. Choose a node to expand, and expand it - i.e. run a simulation
-    /// from this node and backpropigate the result. Returns if we won or not.
-    pub fn expand(&mut self, config: &MCTSConfig, simulation: Simulation) -> u32 {
-        // Choose the first child which is a leaf to expand.
-        let child = self
-            .children
-            .iter_mut()
-            .find(|child| child.state == NodeState::Leaf)
-            .expect("This node should have children!");
-
-        let wins = child.simulate(config, simulation);
-
-        child.visits += config.games_per_search;
-        child.wins += wins;
-
-        // If all the children have been visited once, then we can set the state to expanded.
-        if self.children.iter().all(|child| child.visits > 0) {
-            self.state = NodeState::Expanded;
-        }
-
-        wins
-    }
-
-    /// Third step of MCTS. Apply the child move, run a simulation from this node and backpropigate the result.
-    /// Returns how many times we won.
-    pub fn simulate(&mut self, config: &MCTSConfig, mut simulation: Simulation) -> u32 {
-        // Apply the move to the simulation
+    /// Runs a simulation of the game at this node `n` times and returns the number of wins.
+    /// Assumes that all previous moves have already been applied to `simulation` before
+    /// passing it on to this function.
+    ///
+    /// Note that this function is parallelized using rayon, to speed up the simulation runs.
+    pub fn simulate_n_times(&mut self, mut simulation: Simulation, n: u32) -> u32 {
         simulation.apply_move(&self.move_);
 
-        // Run the simulation
-        let wins: u32 = (0..config.games_per_search)
+        (0..n)
             .into_par_iter()
-            // Run the simulation
             .map(|_| simulation.clone().run_random_game())
             .map(u32::from)
-            .sum();
-
-        // Backpropigate the result
-        self.visits += config.games_per_search;
-        self.wins += wins;
-
-        wins
+            .sum()
     }
 }

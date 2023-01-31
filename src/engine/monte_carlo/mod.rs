@@ -98,10 +98,6 @@ impl MonteCarlo {
 impl MonteCarlo {
     /// Run one round of the Monte Carlo search.
     fn run_round(&mut self) {
-        // Create a copy of the simulation to play on.
-        let simulation = self.state.clone();
-
-        // Recursively descend the tree until we reach a leaf node.
-        self.root.select(&self.config, simulation, true);
+        todo!()
     }
 }
