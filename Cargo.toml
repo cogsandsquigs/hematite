@@ -36,6 +36,7 @@
 
 	# Misc.
 	itertools = "0.10.5"                                        # Iterator utilities
+	monteo    = { path = "monteo" }                             # For the Monte Carlo Tree Search
 	rand      = { version = "0.8.5", features = ["small_rng"] } # For random numbers
 	rayon     = "1.6.1"                                         # For parallelism
 	uuid      = { version = "1.2.2", features = ["serde"] }     # Parsing game UUIDs
