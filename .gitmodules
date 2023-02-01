@@ -1,0 +1,3 @@
+[submodule "monteo"]
+	path = monteo
+	url = git@github.com:cogsandsquigs/monteo.git
