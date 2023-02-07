@@ -1,4 +1,4 @@
-use super::mcts::MCTSConfig;
+use monteo::config::MonteoConfig;
 use serde::{Deserialize, Serialize};
 
 /// The structure holding the configuration for the engine.
@@ -10,7 +10,7 @@ pub struct EngineConfig {
 
     /// The MCTS configuration.
     #[serde(default)]
-    pub mcts: MCTSConfig,
+    pub mcts: MonteoConfig,
 }
 
 impl EngineConfig {
@@ -24,7 +24,7 @@ impl Default for EngineConfig {
     fn default() -> Self {
         Self {
             hungry_moves: Self::default_hungry_moves(),
-            mcts: MCTSConfig::default(),
+            mcts: MonteoConfig::default(),
         }
     }
 }

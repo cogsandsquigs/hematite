@@ -1,4 +1,5 @@
 use super::point::Point;
+use monteo::game::Action;
 use rand::seq::SliceRandom;
 use rocket::serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
@@ -66,3 +67,5 @@ impl Display for Move {
         }
     }
 }
+
+impl Action for Move {}

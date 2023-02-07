@@ -1,16 +1,17 @@
 mod modes;
-mod monte_carlo;
 mod rules;
+mod simulation;
 mod utils;
 
-use self::{modes::Mode, monte_carlo::MonteCarlo};
+use self::{modes::Mode, simulation::Simulation};
 use crate::{
     configuration::engine::EngineConfig,
     objects::{moves::Move, point::Point, snake::Snake, GameState},
 };
+use monteo::Monteo;
 
 /// The engine for Hematite.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Engine {
     /// The configuration for the engine.
     config: EngineConfig,
@@ -22,7 +23,7 @@ pub struct Engine {
     mode: Mode,
 
     /// The current monte-carlo search tree.
-    tree: MonteCarlo,
+    tree: Monteo<Move, Simulation>,
 }
 
 /// Public API for the engine.
@@ -33,7 +34,7 @@ impl Engine {
             config,
             state: initial_state.clone(),
             mode: Mode::Hungry,
-            tree: MonteCarlo::new(initial_state, config.mcts),
+            tree: Monteo::new(config.mcts, Simulation::new(initial_state)),
         }
     }
 
@@ -43,7 +44,7 @@ impl Engine {
         // Update the mode of the engine.
         self.update_mode();
         // Update the monte-carlo search tree.
-        self.tree.update(state);
+        self.tree = Monteo::new(self.config.mcts, Simulation::new(state)); // TODO: implement updateable simulation.
     }
 
     /// Get the next move for the snake. Should always be called before `update`, to

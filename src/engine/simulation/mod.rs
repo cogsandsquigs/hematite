@@ -9,6 +9,7 @@ use crate::objects::{
     GameState,
 };
 use itertools::Itertools;
+use monteo::game::{Game, Outcome};
 use std::collections::{HashMap, HashSet};
 
 /// The actual game state itself.
@@ -97,28 +98,69 @@ impl Simulation {
     }
 
     /// Gets all the good moves we can make.
-    pub fn allowed_moves(&self) -> impl Iterator<Item = Move> {
+    pub fn allowed_moves(&self) -> Vec<Move> {
         let snake = self.alive_snakes.get(&self.snake_id);
 
         // If we are alive, we return all the good moves we can make.
         if let Some(snake) = snake {
-            self.good_moves(snake, true).into_iter()
+            let good_moves = self.good_moves(snake, true);
+
+            // If we can't make any good moves, we return all the moves as otherwise
+            // that means the game is over (when according to the simulation, it really
+            // isn't).
+            if good_moves.is_empty() {
+                Move::all().to_vec()
+            } else {
+                good_moves
+            }
         }
-        // Otherwise, we return an empty iterator. We can't make any moves :(.
+        // Otherwise, we return all the moves, as we can't make any good moves :(.
+        // We have to return at least one move, otherwise Monteo panics.
         else {
-            vec![].into_iter()
+            Move::all().to_vec()
         }
     }
 
-    /// Runs a random game with the current state. Returns if we won or not.
-    pub fn run_random_game(&self) -> bool {
-        let mut simulation = self.clone();
+    // /// Runs a random game with the current state. Returns if we won or not.
+    // pub fn run_random_game(&self) -> bool {
+    //     let mut simulation = self.clone();
 
-        while !simulation.is_over() {
-            let move_ = simulation.random_good_move(&simulation.snake_id);
-            simulation.apply_move(&move_);
-        }
+    //     while !simulation.is_over() {
+    //         let move_ = simulation.random_good_move(&simulation.snake_id);
+    //         simulation.apply_move(&move_);
+    //     }
 
-        simulation.did_win()
+    //     simulation.did_win()
+    // }
+}
+
+impl Game<Move> for Simulation {
+    fn actions(&self) -> Vec<Move> {
+        self.allowed_moves()
     }
+
+    fn outcome(&self) -> Option<Outcome> {
+        if self.is_over() {
+            Some(if self.did_win() {
+                Outcome::Win
+            } else {
+                Outcome::Loss
+            })
+        } else {
+            None
+        }
+    }
+
+    fn play_move(&mut self, action: &Move) {
+        self.apply_move(action)
+    }
+
+    // fn random_rollout(&mut self) -> Outcome {
+    //     while !self.is_over() {
+    //         let move_ = self.random_good_move(&self.snake_id);
+    //         self.apply_move(&move_);
+    //     }
+
+    //     self.outcome().unwrap()
+    // }
 }
