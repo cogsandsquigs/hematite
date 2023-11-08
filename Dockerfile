@@ -1,6 +1,6 @@
 # Latest rust version, using a slim image
 # Can't use alpine because of musl
-FROM rust:1.66-slim
+FROM rust:slim
 
 # Copy over the source code
 COPY . .
